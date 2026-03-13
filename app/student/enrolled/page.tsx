@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
@@ -43,7 +44,11 @@ export default async function StudentEnrolledCoursesPage() {
           <p>You are not enrolled in any courses yet.</p>
         ) : (
           enrollments.map((enrollment) => (
-            <div key={enrollment.id} className="rounded border p-4">
+            <Link
+              key={enrollment.id}
+              href={`/student/courses/${enrollment.course.id}`}
+              className="block rounded border p-4"
+            >
               <h2 className="text-xl font-semibold">
                 {enrollment.course.title}
               </h2>
@@ -54,7 +59,7 @@ export default async function StudentEnrolledCoursesPage() {
                 Instructor: {enrollment.course.instructor.name} (
                 {enrollment.course.instructor.email})
               </p>
-            </div>
+            </Link>
           ))
         )}
       </div>

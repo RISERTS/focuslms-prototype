@@ -1,0 +1,96 @@
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/get-session";
+
+export default async function StudentCourseDetailPage({
+  params,
+}: {
+  params: Promise<{ courseId: string }>;
+}) {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  if (session.role !== "STUDENT") {
+    redirect("/login");
+  }
+
+  const { courseId } = await params;
+
+  const enrollment = await prisma.enrollment.findUnique({
+    where: {
+      userId_courseId: {
+        userId: session.userId,
+        courseId,
+      },
+    },
+  });
+
+  if (!enrollment) {
+    redirect("/student/courses");
+  }
+
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: {
+      instructor: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      materials: {
+        orderBy: {
+          uploadedAt: "desc",
+        },
+      },
+    },
+  });
+
+  if (!course) {
+    return (
+      <main className="min-h-screen p-8">
+        <h1 className="text-2xl font-bold">Course not found</h1>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen p-8">
+      <h1 className="text-3xl font-bold">{course.title}</h1>
+      <p className="mt-2 text-gray-600">
+        {course.description || "No description"}
+      </p>
+      <p className="mt-2 text-sm text-gray-500">
+        Instructor: {course.instructor.name} ({course.instructor.email})
+      </p>
+
+      <div className="mt-8 space-y-4">
+        <h2 className="text-2xl font-semibold">Materials</h2>
+
+        {course.materials.length === 0 ? (
+          <p>No materials available yet.</p>
+        ) : (
+          course.materials.map((material) => (
+            <div key={material.id} className="rounded border p-4">
+              <h3 className="text-lg font-semibold">{material.title}</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Type: {material.fileType}
+              </p>
+              <a
+                href={material.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block underline"
+              >
+                Open Material
+              </a>
+            </div>
+          ))
+        )}
+      </div>
+    </main>
+  );
+}

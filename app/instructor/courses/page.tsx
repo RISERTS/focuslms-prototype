@@ -40,12 +40,16 @@ export default async function InstructorCoursesPage() {
           <p>No courses created yet.</p>
         ) : (
           courses.map((course) => (
-            <div key={course.id} className="rounded border p-4">
+            <Link
+              key={course.id}
+              href={`/instructor/courses/${course.id}`}
+              className="block rounded border p-4"
+            >
               <h2 className="text-xl font-semibold">{course.title}</h2>
               <p className="mt-2 text-gray-600">
                 {course.description || "No description"}
               </p>
-            </div>
+            </Link>
           ))
         )}
       </div>
