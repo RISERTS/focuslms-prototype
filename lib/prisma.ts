@@ -1,0 +1,24 @@
+import "dotenv/config";
+import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const connectionString =
+  process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("Missing DIRECT_DATABASE_URL or DATABASE_URL");
+}
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter: new PrismaPg({ connectionString }),
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}

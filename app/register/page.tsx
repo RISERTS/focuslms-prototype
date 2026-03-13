@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
 
   const [form, setForm] = useState({
+    name: "",
     email: "",
     password: "",
+    role: "STUDENT",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/login", {
+    const res = await fetch("/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -27,25 +29,29 @@ export default function LoginPage() {
     });
 
     const data = await res.json();
+
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error || "Login failed.");
+      setError(data.error || "Registration failed.");
       return;
     }
 
-    if (data.role === "INSTRUCTOR") {
-      router.push("/instructor/dashboard");
-    } else {
-      router.push("/student/dashboard");
-    }
+    router.push("/login");
   }
 
   return (
     <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold">Login</h1>
+      <h1 className="text-3xl font-bold">Register</h1>
 
       <form onSubmit={handleSubmit} className="mt-6 max-w-md space-y-4">
+        <input
+          className="w-full rounded border p-3"
+          placeholder="Full name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
+
         <input
           className="w-full rounded border p-3"
           type="email"
@@ -62,6 +68,15 @@ export default function LoginPage() {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
 
+        <select
+          className="w-full rounded border p-3"
+          value={form.role}
+          onChange={(e) => setForm({ ...form, role: e.target.value })}
+        >
+          <option value="STUDENT">Student</option>
+          <option value="INSTRUCTOR">Instructor</option>
+        </select>
+
         {error && <p className="text-red-600">{error}</p>}
 
         <button
@@ -69,7 +84,7 @@ export default function LoginPage() {
           disabled={loading}
           className="rounded bg-black px-4 py-2 text-white"
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Registering..." : "Register"}
         </button>
       </form>
     </main>
