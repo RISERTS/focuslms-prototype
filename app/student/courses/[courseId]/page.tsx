@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
@@ -9,11 +10,7 @@ export default async function StudentCourseDetailPage({
 }) {
   const session = await getSession();
 
-  if (!session) {
-    redirect("/login");
-  }
-
-  if (session.role !== "STUDENT") {
+  if (!session || session.role !== "STUDENT") {
     redirect("/login");
   }
 
@@ -46,6 +43,11 @@ export default async function StudentCourseDetailPage({
           uploadedAt: "desc",
         },
       },
+      quizzes: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
 
@@ -69,16 +71,12 @@ export default async function StudentCourseDetailPage({
 
       <div className="mt-8 space-y-4">
         <h2 className="text-2xl font-semibold">Materials</h2>
-
         {course.materials.length === 0 ? (
           <p>No materials available yet.</p>
         ) : (
           course.materials.map((material) => (
             <div key={material.id} className="rounded border p-4">
               <h3 className="text-lg font-semibold">{material.title}</h3>
-              <p className="mt-2 text-sm text-gray-500">
-                Type: {material.fileType}
-              </p>
               <a
                 href={material.fileUrl}
                 target="_blank"
@@ -88,6 +86,24 @@ export default async function StudentCourseDetailPage({
                 Open Material
               </a>
             </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-10 space-y-4">
+        <h2 className="text-2xl font-semibold">Quizzes</h2>
+        {course.quizzes.length === 0 ? (
+          <p>No quizzes available yet.</p>
+        ) : (
+          course.quizzes.map((quiz) => (
+            <Link
+              key={quiz.id}
+              href={`/student/courses/${course.id}/quizzes/${quiz.id}`}
+              className="block rounded border p-4"
+            >
+              <h3 className="text-lg font-semibold">{quiz.title}</h3>
+              <p className="mt-2 text-gray-600">{quiz.description || "No description"}</p>
+            </Link>
           ))
         )}
       </div>

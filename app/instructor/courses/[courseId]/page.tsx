@@ -28,6 +28,11 @@ export default async function InstructorCourseDetailPage({
           uploadedAt: "desc",
         },
       },
+      quizzes: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
 
@@ -53,12 +58,20 @@ export default async function InstructorCourseDetailPage({
           </p>
         </div>
 
-        <Link
-          href={`/instructor/courses/${course.id}/add-material`}
-          className="rounded bg-black px-4 py-2 text-white"
-        >
-          Add Material
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href={`/instructor/courses/${course.id}/add-material`}
+            className="rounded border px-4 py-2"
+          >
+            Add Material
+          </Link>
+          <Link
+            href={`/instructor/courses/${course.id}/quizzes`}
+            className="rounded bg-black px-4 py-2 text-white"
+          >
+            Manage Quizzes
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8 space-y-4">
@@ -82,6 +95,25 @@ export default async function InstructorCourseDetailPage({
                 Open Material
               </a>
             </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-10 space-y-4">
+        <h2 className="text-2xl font-semibold">Quizzes</h2>
+
+        {course.quizzes.length === 0 ? (
+          <p>No quizzes created yet.</p>
+        ) : (
+          course.quizzes.map((quiz) => (
+            <Link
+              key={quiz.id}
+              href={`/instructor/courses/${course.id}/quizzes/${quiz.id}`}
+              className="block rounded border p-4"
+            >
+              <h3 className="text-lg font-semibold">{quiz.title}</h3>
+              <p className="mt-2 text-gray-600">{quiz.description || "No description"}</p>
+            </Link>
           ))
         )}
       </div>
