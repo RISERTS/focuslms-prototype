@@ -129,7 +129,12 @@ export const QuizScalarFieldEnum = {
   courseId: 'courseId',
   title: 'title',
   description: 'description',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  maxAttempts: 'maxAttempts',
+  questionsPerAttempt: 'questionsPerAttempt',
+  shuffleOptions: 'shuffleOptions',
+  avoidRepeatedQuestions: 'avoidRepeatedQuestions',
+  quizType: 'quizType'
 } as const
 
 export type QuizScalarFieldEnum = (typeof QuizScalarFieldEnum)[keyof typeof QuizScalarFieldEnum]
@@ -145,7 +150,8 @@ export const QuestionScalarFieldEnum = {
   optionD: 'optionD',
   correctAnswer: 'correctAnswer',
   difficulty: 'difficulty',
-  timeThresholdSeconds: 'timeThresholdSeconds'
+  timeThresholdSeconds: 'timeThresholdSeconds',
+  questionType: 'questionType'
 } as const
 
 export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]

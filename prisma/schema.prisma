@@ -32,6 +32,21 @@ enum ActionType {
   VIEW_DASHBOARD
 }
 
+enum QuizType {
+  MULTIPLE_CHOICE
+  IDENTIFICATION
+  ESSAY
+  COMPUTATIONAL
+  MIXED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  IDENTIFICATION
+  ESSAY
+  COMPUTATIONAL
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -85,11 +100,16 @@ model Material {
 }
 
 model Quiz {
-  id          String   @id @default(cuid())
-  courseId    String
-  title       String
-  description String?
-  createdAt   DateTime @default(now())
+  id                     String   @id @default(cuid())
+  courseId               String
+  title                  String
+  description            String?
+  createdAt              DateTime @default(now())
+  maxAttempts            Int      @default(3)
+  questionsPerAttempt    Int?
+  shuffleOptions         Boolean  @default(true)
+  avoidRepeatedQuestions Boolean  @default(true)
+  quizType               QuizType @default(MULTIPLE_CHOICE)
 
   course    Course        @relation(fields: [courseId], references: [id])
   questions Question[]
@@ -100,13 +120,14 @@ model Question {
   id                   String          @id @default(cuid())
   quizId               String
   questionText         String
-  optionA              String
-  optionB              String
-  optionC              String
-  optionD              String
+  optionA              String?
+  optionB              String?
+  optionC              String?
+  optionD              String?
   correctAnswer        String
   difficulty           DifficultyLevel
   timeThresholdSeconds Int
+  questionType         QuestionType    @default(MULTIPLE_CHOICE)
 
   quiz    Quiz         @relation(fields: [quizId], references: [id])
   answers QuizAnswer[]

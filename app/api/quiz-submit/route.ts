@@ -4,9 +4,24 @@ import { getSession } from "@/lib/get-session";
 
 type SubmittedAnswer = {
   questionId: string;
-  selectedAnswer: "A" | "B" | "C" | "D";
+  selectedAnswer: string;
   responseTimeSeconds: number;
 };
+
+function normalizeText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function isComputationalMatch(expected: string, actual: string): boolean {
+  const expectedNum = Number(expected);
+  const actualNum = Number(actual);
+
+  if (!Number.isNaN(expectedNum) && !Number.isNaN(actualNum)) {
+    return expectedNum === actualNum;
+  }
+
+  return normalizeText(expected) === normalizeText(actual);
+}
 
 export async function POST(req: Request) {
   try {
@@ -35,6 +50,11 @@ export async function POST(req: Request) {
       include: {
         course: true,
         questions: true,
+        attempts: {
+          where: {
+            studentId: session.userId,
+          },
+        },
       },
     });
 
@@ -58,6 +78,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (quiz.attempts.length >= quiz.maxAttempts) {
+      return NextResponse.json(
+        { error: "Maximum quiz attempts reached." },
+        { status: 403 }
+      );
+    }
+
     const attempt = await prisma.quizAttempt.create({
       data: {
         quizId,
@@ -67,27 +94,60 @@ export async function POST(req: Request) {
       },
     });
 
+    let autoGradedCount = 0;
     let correctCount = 0;
 
-    await prisma.quizAnswer.createMany({
-      data: answers.map((answer) => {
-        const question = quiz.questions.find((q) => q.id === answer.questionId);
-        const isCorrect = question?.correctAnswer === answer.selectedAnswer;
+    const answerRows = answers.map((answer) => {
+      const question = quiz.questions.find((q) => q.id === answer.questionId);
 
-        if (isCorrect) correctCount++;
+      if (!question) {
+        return null;
+      }
 
-        return {
-          attemptId: attempt.id,
-          questionId: answer.questionId,
-          selectedAnswer: answer.selectedAnswer,
-          isCorrect: Boolean(isCorrect),
-          responseTimeSeconds: Number(answer.responseTimeSeconds || 0),
-          difficultyServed: question?.difficulty || "MEDIUM",
-        };
-      }),
+      let isCorrect = false;
+      let isAutoGradable = true;
+
+      if (question.questionType === "MULTIPLE_CHOICE") {
+        isCorrect = question.correctAnswer === answer.selectedAnswer;
+      } else if (question.questionType === "IDENTIFICATION") {
+        isCorrect =
+          normalizeText(question.correctAnswer) ===
+          normalizeText(answer.selectedAnswer);
+      } else if (question.questionType === "COMPUTATIONAL") {
+        isCorrect = isComputationalMatch(
+          question.correctAnswer,
+          answer.selectedAnswer
+        );
+      } else {
+        isAutoGradable = false;
+        isCorrect = false;
+      }
+
+      if (isAutoGradable) {
+        autoGradedCount++;
+        if (isCorrect) {
+          correctCount++;
+        }
+      }
+
+      return {
+        attemptId: attempt.id,
+        questionId: answer.questionId,
+        selectedAnswer: answer.selectedAnswer,
+        isCorrect,
+        responseTimeSeconds: Number(answer.responseTimeSeconds || 0),
+        difficultyServed: question.difficulty,
+      };
     });
 
-    const score = (correctCount / quiz.questions.length) * 100;
+    await prisma.quizAnswer.createMany({
+      data: answerRows.filter(
+        (row): row is NonNullable<typeof row> => row !== null
+      ),
+    });
+
+    const score =
+      autoGradedCount > 0 ? (correctCount / autoGradedCount) * 100 : 0;
 
     await prisma.quizAttempt.update({
       where: { id: attempt.id },
@@ -97,6 +157,10 @@ export async function POST(req: Request) {
     return NextResponse.json({
       message: "Quiz submitted successfully.",
       score,
+      note:
+        quiz.quizType === "ESSAY" || quiz.quizType === "MIXED"
+          ? "Essay answers may require instructor review."
+          : undefined,
     });
   } catch (error) {
     console.error("Quiz submit error:", error);

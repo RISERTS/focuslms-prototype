@@ -3,7 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
-type CorrectAnswer = "A" | "B" | "C" | "D";
+type QuestionType =
+  | "MULTIPLE_CHOICE"
+  | "IDENTIFICATION"
+  | "ESSAY"
+  | "COMPUTATIONAL";
 
 export async function POST(req: Request) {
   try {
@@ -23,11 +27,12 @@ export async function POST(req: Request) {
     const body = (await req.json()) as {
       quizId?: string;
       questionText?: string;
-      optionA?: string;
-      optionB?: string;
-      optionC?: string;
-      optionD?: string;
-      correctAnswer?: CorrectAnswer;
+      questionType?: QuestionType;
+      optionA?: string | null;
+      optionB?: string | null;
+      optionC?: string | null;
+      optionD?: string | null;
+      correctAnswer?: string;
       difficulty?: Difficulty;
       timeThresholdSeconds?: number;
     };
@@ -35,6 +40,7 @@ export async function POST(req: Request) {
     const {
       quizId,
       questionText,
+      questionType,
       optionA,
       optionB,
       optionC,
@@ -44,19 +50,19 @@ export async function POST(req: Request) {
       timeThresholdSeconds,
     } = body;
 
+    if (!quizId || !questionText?.trim() || !questionType || !correctAnswer?.trim() || !difficulty || !timeThresholdSeconds) {
+      return NextResponse.json(
+        { error: "Required question fields are missing." },
+        { status: 400 }
+      );
+    }
+
     if (
-      !quizId ||
-      !questionText?.trim() ||
-      !optionA?.trim() ||
-      !optionB?.trim() ||
-      !optionC?.trim() ||
-      !optionD?.trim() ||
-      !correctAnswer ||
-      !difficulty ||
-      !timeThresholdSeconds
+      questionType === "MULTIPLE_CHOICE" &&
+      (!optionA?.trim() || !optionB?.trim() || !optionC?.trim() || !optionD?.trim())
     ) {
       return NextResponse.json(
-        { error: "All question fields are required." },
+        { error: "All four options are required for multiple choice questions." },
         { status: 400 }
       );
     }
@@ -81,11 +87,12 @@ export async function POST(req: Request) {
       data: {
         quizId,
         questionText: questionText.trim(),
-        optionA: optionA.trim(),
-        optionB: optionB.trim(),
-        optionC: optionC.trim(),
-        optionD: optionD.trim(),
-        correctAnswer,
+        questionType,
+        optionA: optionA?.trim() || null,
+        optionB: optionB?.trim() || null,
+        optionC: optionC?.trim() || null,
+        optionD: optionD?.trim() || null,
+        correctAnswer: correctAnswer.trim(),
         difficulty,
         timeThresholdSeconds: Number(timeThresholdSeconds),
       },

@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 
+type QuizType =
+  | "MULTIPLE_CHOICE"
+  | "IDENTIFICATION"
+  | "ESSAY"
+  | "COMPUTATIONAL"
+  | "MIXED";
+
 export async function POST(req: Request) {
   try {
     const session = await getSession();
@@ -21,9 +28,23 @@ export async function POST(req: Request) {
       courseId?: string;
       title?: string;
       description?: string;
+      maxAttempts?: number;
+      questionsPerAttempt?: number | null;
+      shuffleOptions?: boolean;
+      avoidRepeatedQuestions?: boolean;
+      quizType?: QuizType;
     };
 
-    const { courseId, title, description } = body;
+    const {
+      courseId,
+      title,
+      description,
+      maxAttempts,
+      questionsPerAttempt,
+      shuffleOptions,
+      avoidRepeatedQuestions,
+      quizType,
+    } = body;
 
     if (!courseId || !title?.trim()) {
       return NextResponse.json(
@@ -52,6 +73,14 @@ export async function POST(req: Request) {
         courseId,
         title: title.trim(),
         description: description?.trim() || null,
+        maxAttempts: maxAttempts && maxAttempts > 0 ? maxAttempts : 3,
+        questionsPerAttempt:
+          questionsPerAttempt && questionsPerAttempt > 0
+            ? questionsPerAttempt
+            : null,
+        shuffleOptions: shuffleOptions ?? true,
+        avoidRepeatedQuestions: avoidRepeatedQuestions ?? true,
+        quizType: quizType ?? "MULTIPLE_CHOICE",
       },
     });
 

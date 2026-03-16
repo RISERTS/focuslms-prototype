@@ -14,6 +14,7 @@ export default function AddQuestionPage() {
   const quizId = params.quizId;
 
   const [questionText, setQuestionText] = useState("");
+  const [questionType, setQuestionType] = useState("MULTIPLE_CHOICE");
   const [optionA, setOptionA] = useState("");
   const [optionB, setOptionB] = useState("");
   const [optionC, setOptionC] = useState("");
@@ -23,6 +24,8 @@ export default function AddQuestionPage() {
   const [timeThresholdSeconds, setTimeThresholdSeconds] = useState(30);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const isMCQ = questionType === "MULTIPLE_CHOICE";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,10 +41,11 @@ export default function AddQuestionPage() {
         body: JSON.stringify({
           quizId,
           questionText,
-          optionA,
-          optionB,
-          optionC,
-          optionD,
+          questionType,
+          optionA: isMCQ ? optionA : null,
+          optionB: isMCQ ? optionB : null,
+          optionC: isMCQ ? optionC : null,
+          optionD: isMCQ ? optionD : null,
           correctAnswer,
           difficulty,
           timeThresholdSeconds,
@@ -79,17 +83,39 @@ export default function AddQuestionPage() {
           onChange={(e) => setQuestionText(e.target.value)}
         />
 
-        <input className="w-full rounded border p-3" placeholder="Option A" value={optionA} onChange={(e) => setOptionA(e.target.value)} />
-        <input className="w-full rounded border p-3" placeholder="Option B" value={optionB} onChange={(e) => setOptionB(e.target.value)} />
-        <input className="w-full rounded border p-3" placeholder="Option C" value={optionC} onChange={(e) => setOptionC(e.target.value)} />
-        <input className="w-full rounded border p-3" placeholder="Option D" value={optionD} onChange={(e) => setOptionD(e.target.value)} />
-
-        <select className="w-full rounded border p-3" value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)}>
-          <option value="A">Correct Answer: A</option>
-          <option value="B">Correct Answer: B</option>
-          <option value="C">Correct Answer: C</option>
-          <option value="D">Correct Answer: D</option>
+        <select
+          className="w-full rounded border p-3"
+          value={questionType}
+          onChange={(e) => setQuestionType(e.target.value)}
+        >
+          <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+          <option value="IDENTIFICATION">Identification</option>
+          <option value="ESSAY">Essay</option>
+          <option value="COMPUTATIONAL">Computational</option>
         </select>
+
+        {isMCQ ? (
+          <>
+            <input className="w-full rounded border p-3" placeholder="Option A" value={optionA} onChange={(e) => setOptionA(e.target.value)} />
+            <input className="w-full rounded border p-3" placeholder="Option B" value={optionB} onChange={(e) => setOptionB(e.target.value)} />
+            <input className="w-full rounded border p-3" placeholder="Option C" value={optionC} onChange={(e) => setOptionC(e.target.value)} />
+            <input className="w-full rounded border p-3" placeholder="Option D" value={optionD} onChange={(e) => setOptionD(e.target.value)} />
+
+            <select className="w-full rounded border p-3" value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)}>
+              <option value="A">Correct Answer: A</option>
+              <option value="B">Correct Answer: B</option>
+              <option value="C">Correct Answer: C</option>
+              <option value="D">Correct Answer: D</option>
+            </select>
+          </>
+        ) : (
+          <input
+            className="w-full rounded border p-3"
+            placeholder="Correct answer / expected answer"
+            value={correctAnswer}
+            onChange={(e) => setCorrectAnswer(e.target.value)}
+          />
+        )}
 
         <select className="w-full rounded border p-3" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
           <option value="EASY">Easy</option>
@@ -101,7 +127,7 @@ export default function AddQuestionPage() {
           className="w-full rounded border p-3"
           type="number"
           min={10}
-          max={120}
+          max={300}
           value={timeThresholdSeconds}
           onChange={(e) => setTimeThresholdSeconds(Number(e.target.value))}
         />

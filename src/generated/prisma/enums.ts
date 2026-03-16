@@ -36,3 +36,24 @@ export const ActionType = {
 } as const
 
 export type ActionType = (typeof ActionType)[keyof typeof ActionType]
+
+
+export const QuizType = {
+  MULTIPLE_CHOICE: 'MULTIPLE_CHOICE',
+  IDENTIFICATION: 'IDENTIFICATION',
+  ESSAY: 'ESSAY',
+  COMPUTATIONAL: 'COMPUTATIONAL',
+  MIXED: 'MIXED'
+} as const
+
+export type QuizType = (typeof QuizType)[keyof typeof QuizType]
+
+
+export const QuestionType = {
+  MULTIPLE_CHOICE: 'MULTIPLE_CHOICE',
+  IDENTIFICATION: 'IDENTIFICATION',
+  ESSAY: 'ESSAY',
+  COMPUTATIONAL: 'COMPUTATIONAL'
+} as const
+
+export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType]

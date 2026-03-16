@@ -1,7 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+type OriginalOptionKey = "A" | "B" | "C" | "D";
 
 type QuizQuestion = {
   id: string;
@@ -16,6 +18,7 @@ type QuizData = {
   id: string;
   title: string;
   description: string | null;
+  shuffleOptions: boolean;
   questions: QuizQuestion[];
 };
 
@@ -23,12 +26,26 @@ type Props = {
   quiz: QuizData;
 };
 
+type ShuffledChoice = {
+  originalKey: OriginalOptionKey;
+  text: string;
+};
+
+function shuffleArray<T>(items: T[]): T[] {
+  const arr = [...items];
+
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  return arr;
+}
+
 export default function TakeQuizClient({ quiz }: Props) {
   const router = useRouter();
   const startTimeRef = useRef<number | null>(null);
-  const [answers, setAnswers] = useState<Record<string, "A" | "B" | "C" | "D">>(
-    {}
-  );
+  const [answers, setAnswers] = useState<Record<string, OriginalOptionKey>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,14 +53,30 @@ export default function TakeQuizClient({ quiz }: Props) {
     startTimeRef.current = Date.now();
   }, []);
 
-  function choose(questionId: string, value: "A" | "B" | "C" | "D") {
+  const renderedQuestions = useMemo(() => {
+    return quiz.questions.map((q) => {
+      const choices: ShuffledChoice[] = [
+        { originalKey: "A", text: q.optionA },
+        { originalKey: "B", text: q.optionB },
+        { originalKey: "C", text: q.optionC },
+        { originalKey: "D", text: q.optionD },
+      ];
+
+      return {
+        ...q,
+        renderedChoices: quiz.shuffleOptions ? shuffleArray(choices) : choices,
+      };
+    });
+  }, [quiz]);
+
+  function choose(questionId: string, value: OriginalOptionKey) {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   }
 
   async function handleSubmit() {
     setError("");
 
-    if (Object.keys(answers).length !== quiz.questions.length) {
+    if (Object.keys(answers).length !== renderedQuestions.length) {
       setError("Please answer all questions.");
       return;
     }
@@ -57,12 +90,12 @@ export default function TakeQuizClient({ quiz }: Props) {
     );
     const avgPerQuestion = Math.max(
       1,
-      Math.floor(elapsedSeconds / quiz.questions.length)
+      Math.floor(elapsedSeconds / renderedQuestions.length)
     );
 
     const payload = {
       quizId: quiz.id,
-      answers: quiz.questions.map((q) => ({
+      answers: renderedQuestions.map((q) => ({
         questionId: q.id,
         selectedAnswer: answers[q.id],
         responseTimeSeconds: avgPerQuestion,
@@ -105,34 +138,27 @@ export default function TakeQuizClient({ quiz }: Props) {
       <p className="mt-2 text-gray-600">{quiz.description || "No description"}</p>
 
       <div className="mt-8 space-y-6">
-        {quiz.questions.map((q, index) => (
+        {renderedQuestions.map((q, index) => (
           <div key={q.id} className="rounded border p-4">
             <p className="font-semibold">
               {index + 1}. {q.questionText}
             </p>
 
             <div className="mt-3 space-y-2">
-              {(["A", "B", "C", "D"] as const).map((choice) => {
-                const text =
-                  choice === "A"
-                    ? q.optionA
-                    : choice === "B"
-                    ? q.optionB
-                    : choice === "C"
-                    ? q.optionC
-                    : q.optionD;
+              {q.renderedChoices.map((choice, choiceIndex) => {
+                const visualLabel = ["A", "B", "C", "D"][choiceIndex];
 
                 return (
-                  <label key={choice} className="block">
+                  <label key={`${q.id}-${choice.originalKey}`} className="block">
                     <input
                       type="radio"
                       name={q.id}
-                      value={choice}
-                      checked={answers[q.id] === choice}
-                      onChange={() => choose(q.id, choice)}
+                      value={choice.originalKey}
+                      checked={answers[q.id] === choice.originalKey}
+                      onChange={() => choose(q.id, choice.originalKey)}
                       className="mr-2"
                     />
-                    {choice}. {text}
+                    {visualLabel}. {choice.text}
                   </label>
                 );
               })}

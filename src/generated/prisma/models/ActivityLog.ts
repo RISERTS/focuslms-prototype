@@ -495,14 +495,6 @@ export type EnumActionTypeFieldUpdateOperationsInput = {
   set?: $Enums.ActionType
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type ActivityLogCreateWithoutUserInput = {
   id?: string
   actionType: $Enums.ActionType
