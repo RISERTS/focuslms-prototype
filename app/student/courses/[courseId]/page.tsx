@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
+import TrackedMaterialLink from "@/components/TrackedMaterialLink";
 
 export default async function StudentCourseDetailPage({
   params,
@@ -77,14 +78,13 @@ export default async function StudentCourseDetailPage({
           course.materials.map((material) => (
             <div key={material.id} className="rounded border p-4">
               <h3 className="text-lg font-semibold">{material.title}</h3>
-              <a
+              <TrackedMaterialLink
                 href={material.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-block underline"
+                courseId={course.id}
+                materialId={material.id}
               >
                 Open Material
-              </a>
+              </TrackedMaterialLink>
             </div>
           ))
         )}
@@ -102,7 +102,9 @@ export default async function StudentCourseDetailPage({
               className="block rounded border p-4"
             >
               <h3 className="text-lg font-semibold">{quiz.title}</h3>
-              <p className="mt-2 text-gray-600">{quiz.description || "No description"}</p>
+              <p className="mt-2 text-gray-600">
+                {quiz.description || "No description"}
+              </p>
             </Link>
           ))
         )}

@@ -140,10 +140,12 @@ export async function POST(req: Request) {
       };
     });
 
+    const validRows = answerRows.filter(
+      (row): row is NonNullable<typeof row> => row !== null
+    );
+
     await prisma.quizAnswer.createMany({
-      data: answerRows.filter(
-        (row): row is NonNullable<typeof row> => row !== null
-      ),
+      data: validRows,
     });
 
     const score =
@@ -152,6 +154,19 @@ export async function POST(req: Request) {
     await prisma.quizAttempt.update({
       where: { id: attempt.id },
       data: { score },
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        userId: session.userId,
+        courseId: quiz.courseId,
+        actionType: "SUBMIT_QUIZ",
+        targetId: quiz.id,
+        durationSeconds: validRows.reduce(
+          (sum, row) => sum + row.responseTimeSeconds,
+          0
+        ),
+      },
     });
 
     return NextResponse.json({

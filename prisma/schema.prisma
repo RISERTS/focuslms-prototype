@@ -110,6 +110,7 @@ model Quiz {
   shuffleOptions         Boolean  @default(true)
   avoidRepeatedQuestions Boolean  @default(true)
   quizType               QuizType @default(MULTIPLE_CHOICE)
+  adaptiveMode           Boolean  @default(false)
 
   course    Course        @relation(fields: [courseId], references: [id])
   questions Question[]
@@ -147,20 +148,6 @@ model QuizAttempt {
   answers QuizAnswer[]
 }
 
-model QuizAnswer {
-  id                  String          @id @default(cuid())
-  attemptId           String
-  questionId          String
-  selectedAnswer      String
-  isCorrect           Boolean
-  responseTimeSeconds Int
-  difficultyServed    DifficultyLevel
-  answeredAt          DateTime        @default(now())
-
-  attempt  QuizAttempt @relation(fields: [attemptId], references: [id])
-  question Question    @relation(fields: [questionId], references: [id])
-}
-
 model ActivityLog {
   id              String     @id @default(cuid())
   userId          String
@@ -176,4 +163,20 @@ model ActivityLog {
   @@index([userId])
   @@index([courseId])
   @@index([createdAt])
+}
+
+model QuizAnswer {
+  id                  String          @id @default(cuid())
+  attemptId           String
+  questionId          String
+  selectedAnswer      String
+  isCorrect           Boolean
+  responseTimeSeconds Int
+  difficultyServed    DifficultyLevel
+  answeredAt          DateTime        @default(now())
+  manualScore         Float?
+  instructorFeedback  String?
+
+  attempt  QuizAttempt @relation(fields: [attemptId], references: [id])
+  question Question    @relation(fields: [questionId], references: [id])
 }

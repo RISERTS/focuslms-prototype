@@ -53,12 +53,12 @@ export type Question = Prisma.QuestionModel
  */
 export type QuizAttempt = Prisma.QuizAttemptModel
 /**
- * Model QuizAnswer
- * 
- */
-export type QuizAnswer = Prisma.QuizAnswerModel
-/**
  * Model ActivityLog
  * 
  */
 export type ActivityLog = Prisma.ActivityLogModel
+/**
+ * Model QuizAnswer
+ * 
+ */
+export type QuizAnswer = Prisma.QuizAnswerModel

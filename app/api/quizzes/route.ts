@@ -33,6 +33,7 @@ export async function POST(req: Request) {
       shuffleOptions?: boolean;
       avoidRepeatedQuestions?: boolean;
       quizType?: QuizType;
+      adaptiveMode?: boolean;
     };
 
     const {
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
       shuffleOptions,
       avoidRepeatedQuestions,
       quizType,
+      adaptiveMode,
     } = body;
 
     if (!courseId || !title?.trim()) {
@@ -81,6 +83,7 @@ export async function POST(req: Request) {
         shuffleOptions: shuffleOptions ?? true,
         avoidRepeatedQuestions: avoidRepeatedQuestions ?? true,
         quizType: quizType ?? "MULTIPLE_CHOICE",
+        adaptiveMode: adaptiveMode ?? false,
       },
     });
 

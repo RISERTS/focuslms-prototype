@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/get-session";
+import LogOnMount from "@/components/LogOnMount";
 
 export default async function InstructorDashboardPage() {
   const session = await getSession();
@@ -15,6 +16,8 @@ export default async function InstructorDashboardPage() {
 
   return (
     <main className="min-h-screen p-8">
+      <LogOnMount actionType="VIEW_DASHBOARD" />
+
       <h1 className="text-2xl font-bold">Instructor Dashboard</h1>
       <p className="mt-2">Welcome, {session.email}</p>
 

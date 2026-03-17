@@ -28,10 +28,12 @@ export type AggregateQuizAnswer = {
 
 export type QuizAnswerAvgAggregateOutputType = {
   responseTimeSeconds: number | null
+  manualScore: number | null
 }
 
 export type QuizAnswerSumAggregateOutputType = {
   responseTimeSeconds: number | null
+  manualScore: number | null
 }
 
 export type QuizAnswerMinAggregateOutputType = {
@@ -43,6 +45,8 @@ export type QuizAnswerMinAggregateOutputType = {
   responseTimeSeconds: number | null
   difficultyServed: $Enums.DifficultyLevel | null
   answeredAt: Date | null
+  manualScore: number | null
+  instructorFeedback: string | null
 }
 
 export type QuizAnswerMaxAggregateOutputType = {
@@ -54,6 +58,8 @@ export type QuizAnswerMaxAggregateOutputType = {
   responseTimeSeconds: number | null
   difficultyServed: $Enums.DifficultyLevel | null
   answeredAt: Date | null
+  manualScore: number | null
+  instructorFeedback: string | null
 }
 
 export type QuizAnswerCountAggregateOutputType = {
@@ -65,16 +71,20 @@ export type QuizAnswerCountAggregateOutputType = {
   responseTimeSeconds: number
   difficultyServed: number
   answeredAt: number
+  manualScore: number
+  instructorFeedback: number
   _all: number
 }
 
 
 export type QuizAnswerAvgAggregateInputType = {
   responseTimeSeconds?: true
+  manualScore?: true
 }
 
 export type QuizAnswerSumAggregateInputType = {
   responseTimeSeconds?: true
+  manualScore?: true
 }
 
 export type QuizAnswerMinAggregateInputType = {
@@ -86,6 +96,8 @@ export type QuizAnswerMinAggregateInputType = {
   responseTimeSeconds?: true
   difficultyServed?: true
   answeredAt?: true
+  manualScore?: true
+  instructorFeedback?: true
 }
 
 export type QuizAnswerMaxAggregateInputType = {
@@ -97,6 +109,8 @@ export type QuizAnswerMaxAggregateInputType = {
   responseTimeSeconds?: true
   difficultyServed?: true
   answeredAt?: true
+  manualScore?: true
+  instructorFeedback?: true
 }
 
 export type QuizAnswerCountAggregateInputType = {
@@ -108,6 +122,8 @@ export type QuizAnswerCountAggregateInputType = {
   responseTimeSeconds?: true
   difficultyServed?: true
   answeredAt?: true
+  manualScore?: true
+  instructorFeedback?: true
   _all?: true
 }
 
@@ -206,6 +222,8 @@ export type QuizAnswerGroupByOutputType = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt: Date
+  manualScore: number | null
+  instructorFeedback: string | null
   _count: QuizAnswerCountAggregateOutputType | null
   _avg: QuizAnswerAvgAggregateOutputType | null
   _sum: QuizAnswerSumAggregateOutputType | null
@@ -240,6 +258,8 @@ export type QuizAnswerWhereInput = {
   responseTimeSeconds?: Prisma.IntFilter<"QuizAnswer"> | number
   difficultyServed?: Prisma.EnumDifficultyLevelFilter<"QuizAnswer"> | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFilter<"QuizAnswer"> | Date | string
+  manualScore?: Prisma.FloatNullableFilter<"QuizAnswer"> | number | null
+  instructorFeedback?: Prisma.StringNullableFilter<"QuizAnswer"> | string | null
   attempt?: Prisma.XOR<Prisma.QuizAttemptScalarRelationFilter, Prisma.QuizAttemptWhereInput>
   question?: Prisma.XOR<Prisma.QuestionScalarRelationFilter, Prisma.QuestionWhereInput>
 }
@@ -253,6 +273,8 @@ export type QuizAnswerOrderByWithRelationInput = {
   responseTimeSeconds?: Prisma.SortOrder
   difficultyServed?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
+  manualScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  instructorFeedback?: Prisma.SortOrderInput | Prisma.SortOrder
   attempt?: Prisma.QuizAttemptOrderByWithRelationInput
   question?: Prisma.QuestionOrderByWithRelationInput
 }
@@ -269,6 +291,8 @@ export type QuizAnswerWhereUniqueInput = Prisma.AtLeast<{
   responseTimeSeconds?: Prisma.IntFilter<"QuizAnswer"> | number
   difficultyServed?: Prisma.EnumDifficultyLevelFilter<"QuizAnswer"> | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFilter<"QuizAnswer"> | Date | string
+  manualScore?: Prisma.FloatNullableFilter<"QuizAnswer"> | number | null
+  instructorFeedback?: Prisma.StringNullableFilter<"QuizAnswer"> | string | null
   attempt?: Prisma.XOR<Prisma.QuizAttemptScalarRelationFilter, Prisma.QuizAttemptWhereInput>
   question?: Prisma.XOR<Prisma.QuestionScalarRelationFilter, Prisma.QuestionWhereInput>
 }, "id">
@@ -282,6 +306,8 @@ export type QuizAnswerOrderByWithAggregationInput = {
   responseTimeSeconds?: Prisma.SortOrder
   difficultyServed?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
+  manualScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  instructorFeedback?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.QuizAnswerCountOrderByAggregateInput
   _avg?: Prisma.QuizAnswerAvgOrderByAggregateInput
   _max?: Prisma.QuizAnswerMaxOrderByAggregateInput
@@ -301,6 +327,8 @@ export type QuizAnswerScalarWhereWithAggregatesInput = {
   responseTimeSeconds?: Prisma.IntWithAggregatesFilter<"QuizAnswer"> | number
   difficultyServed?: Prisma.EnumDifficultyLevelWithAggregatesFilter<"QuizAnswer"> | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeWithAggregatesFilter<"QuizAnswer"> | Date | string
+  manualScore?: Prisma.FloatNullableWithAggregatesFilter<"QuizAnswer"> | number | null
+  instructorFeedback?: Prisma.StringNullableWithAggregatesFilter<"QuizAnswer"> | string | null
 }
 
 export type QuizAnswerCreateInput = {
@@ -310,6 +338,8 @@ export type QuizAnswerCreateInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
   attempt: Prisma.QuizAttemptCreateNestedOneWithoutAnswersInput
   question: Prisma.QuestionCreateNestedOneWithoutAnswersInput
 }
@@ -323,6 +353,8 @@ export type QuizAnswerUncheckedCreateInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
 }
 
 export type QuizAnswerUpdateInput = {
@@ -332,6 +364,8 @@ export type QuizAnswerUpdateInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt?: Prisma.QuizAttemptUpdateOneRequiredWithoutAnswersNestedInput
   question?: Prisma.QuestionUpdateOneRequiredWithoutAnswersNestedInput
 }
@@ -345,6 +379,8 @@ export type QuizAnswerUncheckedUpdateInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type QuizAnswerCreateManyInput = {
@@ -356,6 +392,8 @@ export type QuizAnswerCreateManyInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
 }
 
 export type QuizAnswerUpdateManyMutationInput = {
@@ -365,6 +403,8 @@ export type QuizAnswerUpdateManyMutationInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type QuizAnswerUncheckedUpdateManyInput = {
@@ -376,6 +416,8 @@ export type QuizAnswerUncheckedUpdateManyInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type QuizAnswerListRelationFilter = {
@@ -397,10 +439,13 @@ export type QuizAnswerCountOrderByAggregateInput = {
   responseTimeSeconds?: Prisma.SortOrder
   difficultyServed?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
+  manualScore?: Prisma.SortOrder
+  instructorFeedback?: Prisma.SortOrder
 }
 
 export type QuizAnswerAvgOrderByAggregateInput = {
   responseTimeSeconds?: Prisma.SortOrder
+  manualScore?: Prisma.SortOrder
 }
 
 export type QuizAnswerMaxOrderByAggregateInput = {
@@ -412,6 +457,8 @@ export type QuizAnswerMaxOrderByAggregateInput = {
   responseTimeSeconds?: Prisma.SortOrder
   difficultyServed?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
+  manualScore?: Prisma.SortOrder
+  instructorFeedback?: Prisma.SortOrder
 }
 
 export type QuizAnswerMinOrderByAggregateInput = {
@@ -423,10 +470,13 @@ export type QuizAnswerMinOrderByAggregateInput = {
   responseTimeSeconds?: Prisma.SortOrder
   difficultyServed?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
+  manualScore?: Prisma.SortOrder
+  instructorFeedback?: Prisma.SortOrder
 }
 
 export type QuizAnswerSumOrderByAggregateInput = {
   responseTimeSeconds?: Prisma.SortOrder
+  manualScore?: Prisma.SortOrder
 }
 
 export type QuizAnswerCreateNestedManyWithoutQuestionInput = {
@@ -520,6 +570,8 @@ export type QuizAnswerCreateWithoutQuestionInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
   attempt: Prisma.QuizAttemptCreateNestedOneWithoutAnswersInput
 }
 
@@ -531,6 +583,8 @@ export type QuizAnswerUncheckedCreateWithoutQuestionInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
 }
 
 export type QuizAnswerCreateOrConnectWithoutQuestionInput = {
@@ -571,6 +625,8 @@ export type QuizAnswerScalarWhereInput = {
   responseTimeSeconds?: Prisma.IntFilter<"QuizAnswer"> | number
   difficultyServed?: Prisma.EnumDifficultyLevelFilter<"QuizAnswer"> | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFilter<"QuizAnswer"> | Date | string
+  manualScore?: Prisma.FloatNullableFilter<"QuizAnswer"> | number | null
+  instructorFeedback?: Prisma.StringNullableFilter<"QuizAnswer"> | string | null
 }
 
 export type QuizAnswerCreateWithoutAttemptInput = {
@@ -580,6 +636,8 @@ export type QuizAnswerCreateWithoutAttemptInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
   question: Prisma.QuestionCreateNestedOneWithoutAnswersInput
 }
 
@@ -591,6 +649,8 @@ export type QuizAnswerUncheckedCreateWithoutAttemptInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
 }
 
 export type QuizAnswerCreateOrConnectWithoutAttemptInput = {
@@ -627,6 +687,8 @@ export type QuizAnswerCreateManyQuestionInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
 }
 
 export type QuizAnswerUpdateWithoutQuestionInput = {
@@ -636,6 +698,8 @@ export type QuizAnswerUpdateWithoutQuestionInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt?: Prisma.QuizAttemptUpdateOneRequiredWithoutAnswersNestedInput
 }
 
@@ -647,6 +711,8 @@ export type QuizAnswerUncheckedUpdateWithoutQuestionInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type QuizAnswerUncheckedUpdateManyWithoutQuestionInput = {
@@ -657,6 +723,8 @@ export type QuizAnswerUncheckedUpdateManyWithoutQuestionInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type QuizAnswerCreateManyAttemptInput = {
@@ -667,6 +735,8 @@ export type QuizAnswerCreateManyAttemptInput = {
   responseTimeSeconds: number
   difficultyServed: $Enums.DifficultyLevel
   answeredAt?: Date | string
+  manualScore?: number | null
+  instructorFeedback?: string | null
 }
 
 export type QuizAnswerUpdateWithoutAttemptInput = {
@@ -676,6 +746,8 @@ export type QuizAnswerUpdateWithoutAttemptInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.QuestionUpdateOneRequiredWithoutAnswersNestedInput
 }
 
@@ -687,6 +759,8 @@ export type QuizAnswerUncheckedUpdateWithoutAttemptInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type QuizAnswerUncheckedUpdateManyWithoutAttemptInput = {
@@ -697,6 +771,8 @@ export type QuizAnswerUncheckedUpdateManyWithoutAttemptInput = {
   responseTimeSeconds?: Prisma.IntFieldUpdateOperationsInput | number
   difficultyServed?: Prisma.EnumDifficultyLevelFieldUpdateOperationsInput | $Enums.DifficultyLevel
   answeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  manualScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  instructorFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -710,6 +786,8 @@ export type QuizAnswerSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   responseTimeSeconds?: boolean
   difficultyServed?: boolean
   answeredAt?: boolean
+  manualScore?: boolean
+  instructorFeedback?: boolean
   attempt?: boolean | Prisma.QuizAttemptDefaultArgs<ExtArgs>
   question?: boolean | Prisma.QuestionDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["quizAnswer"]>
@@ -723,6 +801,8 @@ export type QuizAnswerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   responseTimeSeconds?: boolean
   difficultyServed?: boolean
   answeredAt?: boolean
+  manualScore?: boolean
+  instructorFeedback?: boolean
   attempt?: boolean | Prisma.QuizAttemptDefaultArgs<ExtArgs>
   question?: boolean | Prisma.QuestionDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["quizAnswer"]>
@@ -736,6 +816,8 @@ export type QuizAnswerSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   responseTimeSeconds?: boolean
   difficultyServed?: boolean
   answeredAt?: boolean
+  manualScore?: boolean
+  instructorFeedback?: boolean
   attempt?: boolean | Prisma.QuizAttemptDefaultArgs<ExtArgs>
   question?: boolean | Prisma.QuestionDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["quizAnswer"]>
@@ -749,9 +831,11 @@ export type QuizAnswerSelectScalar = {
   responseTimeSeconds?: boolean
   difficultyServed?: boolean
   answeredAt?: boolean
+  manualScore?: boolean
+  instructorFeedback?: boolean
 }
 
-export type QuizAnswerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "attemptId" | "questionId" | "selectedAnswer" | "isCorrect" | "responseTimeSeconds" | "difficultyServed" | "answeredAt", ExtArgs["result"]["quizAnswer"]>
+export type QuizAnswerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "attemptId" | "questionId" | "selectedAnswer" | "isCorrect" | "responseTimeSeconds" | "difficultyServed" | "answeredAt" | "manualScore" | "instructorFeedback", ExtArgs["result"]["quizAnswer"]>
 export type QuizAnswerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   attempt?: boolean | Prisma.QuizAttemptDefaultArgs<ExtArgs>
   question?: boolean | Prisma.QuestionDefaultArgs<ExtArgs>
@@ -780,6 +864,8 @@ export type $QuizAnswerPayload<ExtArgs extends runtime.Types.Extensions.Internal
     responseTimeSeconds: number
     difficultyServed: $Enums.DifficultyLevel
     answeredAt: Date
+    manualScore: number | null
+    instructorFeedback: string | null
   }, ExtArgs["result"]["quizAnswer"]>
   composites: {}
 }
@@ -1213,6 +1299,8 @@ export interface QuizAnswerFieldRefs {
   readonly responseTimeSeconds: Prisma.FieldRef<"QuizAnswer", 'Int'>
   readonly difficultyServed: Prisma.FieldRef<"QuizAnswer", 'DifficultyLevel'>
   readonly answeredAt: Prisma.FieldRef<"QuizAnswer", 'DateTime'>
+  readonly manualScore: Prisma.FieldRef<"QuizAnswer", 'Float'>
+  readonly instructorFeedback: Prisma.FieldRef<"QuizAnswer", 'String'>
 }
     
 

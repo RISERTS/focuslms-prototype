@@ -71,6 +71,12 @@ export default async function InstructorCourseDetailPage({
           >
             Manage Quizzes
           </Link>
+          <Link
+            href={`/instructor/courses/${course.id}/analytics`}
+            className="rounded border px-4 py-2"
+          >
+            Analytics
+          </Link>
         </div>
       </div>
 
@@ -112,7 +118,9 @@ export default async function InstructorCourseDetailPage({
               className="block rounded border p-4"
             >
               <h3 className="text-lg font-semibold">{quiz.title}</h3>
-              <p className="mt-2 text-gray-600">{quiz.description || "No description"}</p>
+              <p className="mt-2 text-gray-600">
+                {quiz.description || "No description"}
+              </p>
             </Link>
           ))
         )}

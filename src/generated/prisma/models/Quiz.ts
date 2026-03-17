@@ -47,6 +47,7 @@ export type QuizMinAggregateOutputType = {
   shuffleOptions: boolean | null
   avoidRepeatedQuestions: boolean | null
   quizType: $Enums.QuizType | null
+  adaptiveMode: boolean | null
 }
 
 export type QuizMaxAggregateOutputType = {
@@ -60,6 +61,7 @@ export type QuizMaxAggregateOutputType = {
   shuffleOptions: boolean | null
   avoidRepeatedQuestions: boolean | null
   quizType: $Enums.QuizType | null
+  adaptiveMode: boolean | null
 }
 
 export type QuizCountAggregateOutputType = {
@@ -73,6 +75,7 @@ export type QuizCountAggregateOutputType = {
   shuffleOptions: number
   avoidRepeatedQuestions: number
   quizType: number
+  adaptiveMode: number
   _all: number
 }
 
@@ -98,6 +101,7 @@ export type QuizMinAggregateInputType = {
   shuffleOptions?: true
   avoidRepeatedQuestions?: true
   quizType?: true
+  adaptiveMode?: true
 }
 
 export type QuizMaxAggregateInputType = {
@@ -111,6 +115,7 @@ export type QuizMaxAggregateInputType = {
   shuffleOptions?: true
   avoidRepeatedQuestions?: true
   quizType?: true
+  adaptiveMode?: true
 }
 
 export type QuizCountAggregateInputType = {
@@ -124,6 +129,7 @@ export type QuizCountAggregateInputType = {
   shuffleOptions?: true
   avoidRepeatedQuestions?: true
   quizType?: true
+  adaptiveMode?: true
   _all?: true
 }
 
@@ -224,6 +230,7 @@ export type QuizGroupByOutputType = {
   shuffleOptions: boolean
   avoidRepeatedQuestions: boolean
   quizType: $Enums.QuizType
+  adaptiveMode: boolean
   _count: QuizCountAggregateOutputType | null
   _avg: QuizAvgAggregateOutputType | null
   _sum: QuizSumAggregateOutputType | null
@@ -260,6 +267,7 @@ export type QuizWhereInput = {
   shuffleOptions?: Prisma.BoolFilter<"Quiz"> | boolean
   avoidRepeatedQuestions?: Prisma.BoolFilter<"Quiz"> | boolean
   quizType?: Prisma.EnumQuizTypeFilter<"Quiz"> | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFilter<"Quiz"> | boolean
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
   questions?: Prisma.QuestionListRelationFilter
   attempts?: Prisma.QuizAttemptListRelationFilter
@@ -276,6 +284,7 @@ export type QuizOrderByWithRelationInput = {
   shuffleOptions?: Prisma.SortOrder
   avoidRepeatedQuestions?: Prisma.SortOrder
   quizType?: Prisma.SortOrder
+  adaptiveMode?: Prisma.SortOrder
   course?: Prisma.CourseOrderByWithRelationInput
   questions?: Prisma.QuestionOrderByRelationAggregateInput
   attempts?: Prisma.QuizAttemptOrderByRelationAggregateInput
@@ -295,6 +304,7 @@ export type QuizWhereUniqueInput = Prisma.AtLeast<{
   shuffleOptions?: Prisma.BoolFilter<"Quiz"> | boolean
   avoidRepeatedQuestions?: Prisma.BoolFilter<"Quiz"> | boolean
   quizType?: Prisma.EnumQuizTypeFilter<"Quiz"> | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFilter<"Quiz"> | boolean
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
   questions?: Prisma.QuestionListRelationFilter
   attempts?: Prisma.QuizAttemptListRelationFilter
@@ -311,6 +321,7 @@ export type QuizOrderByWithAggregationInput = {
   shuffleOptions?: Prisma.SortOrder
   avoidRepeatedQuestions?: Prisma.SortOrder
   quizType?: Prisma.SortOrder
+  adaptiveMode?: Prisma.SortOrder
   _count?: Prisma.QuizCountOrderByAggregateInput
   _avg?: Prisma.QuizAvgOrderByAggregateInput
   _max?: Prisma.QuizMaxOrderByAggregateInput
@@ -332,6 +343,7 @@ export type QuizScalarWhereWithAggregatesInput = {
   shuffleOptions?: Prisma.BoolWithAggregatesFilter<"Quiz"> | boolean
   avoidRepeatedQuestions?: Prisma.BoolWithAggregatesFilter<"Quiz"> | boolean
   quizType?: Prisma.EnumQuizTypeWithAggregatesFilter<"Quiz"> | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolWithAggregatesFilter<"Quiz"> | boolean
 }
 
 export type QuizCreateInput = {
@@ -344,6 +356,7 @@ export type QuizCreateInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
   course: Prisma.CourseCreateNestedOneWithoutQuizzesInput
   questions?: Prisma.QuestionCreateNestedManyWithoutQuizInput
   attempts?: Prisma.QuizAttemptCreateNestedManyWithoutQuizInput
@@ -360,6 +373,7 @@ export type QuizUncheckedCreateInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutQuizInput
   attempts?: Prisma.QuizAttemptUncheckedCreateNestedManyWithoutQuizInput
 }
@@ -374,6 +388,7 @@ export type QuizUpdateInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
   course?: Prisma.CourseUpdateOneRequiredWithoutQuizzesNestedInput
   questions?: Prisma.QuestionUpdateManyWithoutQuizNestedInput
   attempts?: Prisma.QuizAttemptUpdateManyWithoutQuizNestedInput
@@ -390,6 +405,7 @@ export type QuizUncheckedUpdateInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutQuizNestedInput
   attempts?: Prisma.QuizAttemptUncheckedUpdateManyWithoutQuizNestedInput
 }
@@ -405,6 +421,7 @@ export type QuizCreateManyInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
 }
 
 export type QuizUpdateManyMutationInput = {
@@ -417,6 +434,7 @@ export type QuizUpdateManyMutationInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type QuizUncheckedUpdateManyInput = {
@@ -430,6 +448,7 @@ export type QuizUncheckedUpdateManyInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type QuizListRelationFilter = {
@@ -453,6 +472,7 @@ export type QuizCountOrderByAggregateInput = {
   shuffleOptions?: Prisma.SortOrder
   avoidRepeatedQuestions?: Prisma.SortOrder
   quizType?: Prisma.SortOrder
+  adaptiveMode?: Prisma.SortOrder
 }
 
 export type QuizAvgOrderByAggregateInput = {
@@ -471,6 +491,7 @@ export type QuizMaxOrderByAggregateInput = {
   shuffleOptions?: Prisma.SortOrder
   avoidRepeatedQuestions?: Prisma.SortOrder
   quizType?: Prisma.SortOrder
+  adaptiveMode?: Prisma.SortOrder
 }
 
 export type QuizMinOrderByAggregateInput = {
@@ -484,6 +505,7 @@ export type QuizMinOrderByAggregateInput = {
   shuffleOptions?: Prisma.SortOrder
   avoidRepeatedQuestions?: Prisma.SortOrder
   quizType?: Prisma.SortOrder
+  adaptiveMode?: Prisma.SortOrder
 }
 
 export type QuizSumOrderByAggregateInput = {
@@ -600,6 +622,7 @@ export type QuizCreateWithoutCourseInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
   questions?: Prisma.QuestionCreateNestedManyWithoutQuizInput
   attempts?: Prisma.QuizAttemptCreateNestedManyWithoutQuizInput
 }
@@ -614,6 +637,7 @@ export type QuizUncheckedCreateWithoutCourseInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutQuizInput
   attempts?: Prisma.QuizAttemptUncheckedCreateNestedManyWithoutQuizInput
 }
@@ -658,6 +682,7 @@ export type QuizScalarWhereInput = {
   shuffleOptions?: Prisma.BoolFilter<"Quiz"> | boolean
   avoidRepeatedQuestions?: Prisma.BoolFilter<"Quiz"> | boolean
   quizType?: Prisma.EnumQuizTypeFilter<"Quiz"> | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFilter<"Quiz"> | boolean
 }
 
 export type QuizCreateWithoutQuestionsInput = {
@@ -670,6 +695,7 @@ export type QuizCreateWithoutQuestionsInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
   course: Prisma.CourseCreateNestedOneWithoutQuizzesInput
   attempts?: Prisma.QuizAttemptCreateNestedManyWithoutQuizInput
 }
@@ -685,6 +711,7 @@ export type QuizUncheckedCreateWithoutQuestionsInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
   attempts?: Prisma.QuizAttemptUncheckedCreateNestedManyWithoutQuizInput
 }
 
@@ -714,6 +741,7 @@ export type QuizUpdateWithoutQuestionsInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
   course?: Prisma.CourseUpdateOneRequiredWithoutQuizzesNestedInput
   attempts?: Prisma.QuizAttemptUpdateManyWithoutQuizNestedInput
 }
@@ -729,6 +757,7 @@ export type QuizUncheckedUpdateWithoutQuestionsInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
   attempts?: Prisma.QuizAttemptUncheckedUpdateManyWithoutQuizNestedInput
 }
 
@@ -742,6 +771,7 @@ export type QuizCreateWithoutAttemptsInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
   course: Prisma.CourseCreateNestedOneWithoutQuizzesInput
   questions?: Prisma.QuestionCreateNestedManyWithoutQuizInput
 }
@@ -757,6 +787,7 @@ export type QuizUncheckedCreateWithoutAttemptsInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutQuizInput
 }
 
@@ -786,6 +817,7 @@ export type QuizUpdateWithoutAttemptsInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
   course?: Prisma.CourseUpdateOneRequiredWithoutQuizzesNestedInput
   questions?: Prisma.QuestionUpdateManyWithoutQuizNestedInput
 }
@@ -801,6 +833,7 @@ export type QuizUncheckedUpdateWithoutAttemptsInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutQuizNestedInput
 }
 
@@ -814,6 +847,7 @@ export type QuizCreateManyCourseInput = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: $Enums.QuizType
+  adaptiveMode?: boolean
 }
 
 export type QuizUpdateWithoutCourseInput = {
@@ -826,6 +860,7 @@ export type QuizUpdateWithoutCourseInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
   questions?: Prisma.QuestionUpdateManyWithoutQuizNestedInput
   attempts?: Prisma.QuizAttemptUpdateManyWithoutQuizNestedInput
 }
@@ -840,6 +875,7 @@ export type QuizUncheckedUpdateWithoutCourseInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutQuizNestedInput
   attempts?: Prisma.QuizAttemptUncheckedUpdateManyWithoutQuizNestedInput
 }
@@ -854,6 +890,7 @@ export type QuizUncheckedUpdateManyWithoutCourseInput = {
   shuffleOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avoidRepeatedQuestions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   quizType?: Prisma.EnumQuizTypeFieldUpdateOperationsInput | $Enums.QuizType
+  adaptiveMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 
@@ -907,6 +944,7 @@ export type QuizSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: boolean
+  adaptiveMode?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
   questions?: boolean | Prisma.Quiz$questionsArgs<ExtArgs>
   attempts?: boolean | Prisma.Quiz$attemptsArgs<ExtArgs>
@@ -924,6 +962,7 @@ export type QuizSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: boolean
+  adaptiveMode?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["quiz"]>
 
@@ -938,6 +977,7 @@ export type QuizSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: boolean
+  adaptiveMode?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["quiz"]>
 
@@ -952,9 +992,10 @@ export type QuizSelectScalar = {
   shuffleOptions?: boolean
   avoidRepeatedQuestions?: boolean
   quizType?: boolean
+  adaptiveMode?: boolean
 }
 
-export type QuizOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "courseId" | "title" | "description" | "createdAt" | "maxAttempts" | "questionsPerAttempt" | "shuffleOptions" | "avoidRepeatedQuestions" | "quizType", ExtArgs["result"]["quiz"]>
+export type QuizOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "courseId" | "title" | "description" | "createdAt" | "maxAttempts" | "questionsPerAttempt" | "shuffleOptions" | "avoidRepeatedQuestions" | "quizType" | "adaptiveMode", ExtArgs["result"]["quiz"]>
 export type QuizInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
   questions?: boolean | Prisma.Quiz$questionsArgs<ExtArgs>
@@ -986,6 +1027,7 @@ export type $QuizPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     shuffleOptions: boolean
     avoidRepeatedQuestions: boolean
     quizType: $Enums.QuizType
+    adaptiveMode: boolean
   }, ExtArgs["result"]["quiz"]>
   composites: {}
 }
@@ -1422,6 +1464,7 @@ export interface QuizFieldRefs {
   readonly shuffleOptions: Prisma.FieldRef<"Quiz", 'Boolean'>
   readonly avoidRepeatedQuestions: Prisma.FieldRef<"Quiz", 'Boolean'>
   readonly quizType: Prisma.FieldRef<"Quiz", 'QuizType'>
+  readonly adaptiveMode: Prisma.FieldRef<"Quiz", 'Boolean'>
 }
     
 

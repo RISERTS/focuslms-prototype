@@ -19,6 +19,8 @@ export default function CreateQuizPage() {
   const [questionsPerAttempt, setQuestionsPerAttempt] = useState<number | "">("");
   const [shuffleOptions, setShuffleOptions] = useState(true);
   const [avoidRepeatedQuestions, setAvoidRepeatedQuestions] = useState(true);
+  const [quizType, setQuizType] = useState("MULTIPLE_CHOICE");
+  const [adaptiveMode, setAdaptiveMode] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -42,6 +44,8 @@ export default function CreateQuizPage() {
             questionsPerAttempt === "" ? null : Number(questionsPerAttempt),
           shuffleOptions,
           avoidRepeatedQuestions,
+          quizType,
+          adaptiveMode,
         }),
       });
 
@@ -83,6 +87,18 @@ export default function CreateQuizPage() {
           onChange={(e) => setDescription(e.target.value)}
         />
 
+        <select
+          className="w-full rounded border p-3"
+          value={quizType}
+          onChange={(e) => setQuizType(e.target.value)}
+        >
+          <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+          <option value="IDENTIFICATION">Identification</option>
+          <option value="ESSAY">Essay</option>
+          <option value="COMPUTATIONAL">Computational</option>
+          <option value="MIXED">Mixed</option>
+        </select>
+
         <input
           className="w-full rounded border p-3"
           type="number"
@@ -102,7 +118,7 @@ export default function CreateQuizPage() {
               e.target.value === "" ? "" : Number(e.target.value)
             )
           }
-          placeholder="Questions per attempt (leave blank = all)"
+          placeholder="Items per attempt"
         />
 
         <label className="flex items-center gap-2">
@@ -121,6 +137,15 @@ export default function CreateQuizPage() {
             onChange={(e) => setAvoidRepeatedQuestions(e.target.checked)}
           />
           Avoid repeated questions on retake
+        </label>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={adaptiveMode}
+            onChange={(e) => setAdaptiveMode(e.target.checked)}
+          />
+          Enable rule-based adaptive assessment
         </label>
 
         {error && <p className="text-red-600">{error}</p>}

@@ -28,7 +28,11 @@ export default async function InstructorQuizDetailPage({
     },
   });
 
-  if (!quiz || quiz.courseId !== courseId || quiz.course.instructorId !== session.userId) {
+  if (
+    !quiz ||
+    quiz.courseId !== courseId ||
+    quiz.course.instructorId !== session.userId
+  ) {
     redirect("/login");
   }
 
@@ -48,10 +52,26 @@ export default async function InstructorQuizDetailPage({
         >
           Generate Questions with AI
         </Link>
+
+        <Link
+          href={`/instructor/courses/${courseId}/quizzes/${quizId}/essay-reviews`}
+          className="rounded border px-4 py-2"
+        >
+          Review Essay Answers
+        </Link>
       </div>
 
       <h1 className="mt-6 text-3xl font-bold">{quiz.title}</h1>
-      <p className="mt-2 text-gray-600">{quiz.description || "No description"}</p>
+      <p className="mt-2 text-gray-600">
+        {quiz.description || "No description"}
+      </p>
+      <p className="mt-2 text-sm text-gray-500">
+        Max Attempts: {quiz.maxAttempts} | Questions per Attempt:{" "}
+        {quiz.questionsPerAttempt ?? "All"} | Shuffle Options:{" "}
+        {quiz.shuffleOptions ? "Yes" : "No"} | Avoid Repeats:{" "}
+        {quiz.avoidRepeatedQuestions ? "Yes" : "No"} | Adaptive Mode:{" "}
+        {quiz.adaptiveMode ? "Yes" : "No"}
+      </p>
 
       <div className="mt-8 space-y-4">
         {quiz.questions.length === 0 ? (
@@ -62,14 +82,18 @@ export default async function InstructorQuizDetailPage({
               <p className="font-semibold">
                 {index + 1}. {question.questionText}
               </p>
+
               <div className="mt-2 text-sm">
                 <p>A. {question.optionA}</p>
                 <p>B. {question.optionB}</p>
                 <p>C. {question.optionC}</p>
                 <p>D. {question.optionD}</p>
               </div>
+
               <p className="mt-2 text-sm text-gray-500">
-                Correct: {question.correctAnswer} | Difficulty: {question.difficulty} | Time: {question.timeThresholdSeconds}s
+                Type: {question.questionType} | Correct: {question.correctAnswer}{" "}
+                | Difficulty: {question.difficulty} | Time:{" "}
+                {question.timeThresholdSeconds}s
               </p>
             </div>
           ))

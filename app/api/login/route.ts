@@ -6,7 +6,10 @@ import { signSession } from "@/lib/auth";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password } = body;
+    const { email, password } = body as {
+      email?: string;
+      password?: string;
+    };
 
     if (!email || !password) {
       return NextResponse.json(
@@ -39,6 +42,13 @@ export async function POST(req: Request) {
       userId: user.id,
       role: user.role,
       email: user.email,
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        userId: user.id,
+        actionType: "LOGIN",
+      },
     });
 
     const response = NextResponse.json({

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import { selectQuestionsForAttempt } from "@/lib/quiz-selection";
+import AdaptiveQuizClient from "./adaptive-quiz-client";
 import TakeQuizClient from "./take-quiz-client";
 
 export default async function StudentTakeQuizPage({
@@ -59,6 +60,10 @@ export default async function StudentTakeQuizPage({
         </p>
       </main>
     );
+  }
+
+  if (quiz.adaptiveMode) {
+    return <AdaptiveQuizClient quizId={quiz.id} courseId={courseId} />;
   }
 
   const seenQuestionIds = Array.from(

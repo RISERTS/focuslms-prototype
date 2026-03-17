@@ -58,8 +58,8 @@ export const ModelName = {
   Quiz: 'Quiz',
   Question: 'Question',
   QuizAttempt: 'QuizAttempt',
-  QuizAnswer: 'QuizAnswer',
-  ActivityLog: 'ActivityLog'
+  ActivityLog: 'ActivityLog',
+  QuizAnswer: 'QuizAnswer'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -134,7 +134,8 @@ export const QuizScalarFieldEnum = {
   questionsPerAttempt: 'questionsPerAttempt',
   shuffleOptions: 'shuffleOptions',
   avoidRepeatedQuestions: 'avoidRepeatedQuestions',
-  quizType: 'quizType'
+  quizType: 'quizType',
+  adaptiveMode: 'adaptiveMode'
 } as const
 
 export type QuizScalarFieldEnum = (typeof QuizScalarFieldEnum)[keyof typeof QuizScalarFieldEnum]
@@ -170,20 +171,6 @@ export const QuizAttemptScalarFieldEnum = {
 export type QuizAttemptScalarFieldEnum = (typeof QuizAttemptScalarFieldEnum)[keyof typeof QuizAttemptScalarFieldEnum]
 
 
-export const QuizAnswerScalarFieldEnum = {
-  id: 'id',
-  attemptId: 'attemptId',
-  questionId: 'questionId',
-  selectedAnswer: 'selectedAnswer',
-  isCorrect: 'isCorrect',
-  responseTimeSeconds: 'responseTimeSeconds',
-  difficultyServed: 'difficultyServed',
-  answeredAt: 'answeredAt'
-} as const
-
-export type QuizAnswerScalarFieldEnum = (typeof QuizAnswerScalarFieldEnum)[keyof typeof QuizAnswerScalarFieldEnum]
-
-
 export const ActivityLogScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -195,6 +182,22 @@ export const ActivityLogScalarFieldEnum = {
 } as const
 
 export type ActivityLogScalarFieldEnum = (typeof ActivityLogScalarFieldEnum)[keyof typeof ActivityLogScalarFieldEnum]
+
+
+export const QuizAnswerScalarFieldEnum = {
+  id: 'id',
+  attemptId: 'attemptId',
+  questionId: 'questionId',
+  selectedAnswer: 'selectedAnswer',
+  isCorrect: 'isCorrect',
+  responseTimeSeconds: 'responseTimeSeconds',
+  difficultyServed: 'difficultyServed',
+  answeredAt: 'answeredAt',
+  manualScore: 'manualScore',
+  instructorFeedback: 'instructorFeedback'
+} as const
+
+export type QuizAnswerScalarFieldEnum = (typeof QuizAnswerScalarFieldEnum)[keyof typeof QuizAnswerScalarFieldEnum]
 
 
 export const SortOrder = {
