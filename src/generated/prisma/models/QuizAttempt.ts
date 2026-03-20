@@ -509,10 +509,6 @@ export type QuizAttemptUncheckedUpdateManyWithoutQuizNestedInput = {
   deleteMany?: Prisma.QuizAttemptScalarWhereInput | Prisma.QuizAttemptScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type NullableFloatFieldUpdateOperationsInput = {
   set?: number | null
   increment?: number

@@ -27,7 +27,7 @@ export default function InstructorShell({
   children,
 }: Props) {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900">
+    <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 text-gray-900">
       <section className="border-b border-gray-200 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-6">

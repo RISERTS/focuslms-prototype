@@ -11,7 +11,10 @@ type ApiErrorResponse = {
 export default function CreateCoursePage() {
   const router = useRouter();
 
+  const [courseCode, setCourseCode] = useState("");
   const [title, setTitle] = useState("");
+  const [program, setProgram] = useState("");
+  const [section, setSection] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,7 +30,13 @@ export default function CreateCoursePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({
+          courseCode,
+          title,
+          description,
+          program,
+          section,
+        }),
       });
 
       const text = await res.text();
@@ -51,7 +60,7 @@ export default function CreateCoursePage() {
   return (
     <InstructorShell
       title="Create Course"
-      description="Set up a new course space for materials, quizzes, analytics, and student enrollment."
+      description="Set up a new course space with code, title, program, section, and description."
       actions={[
         {
           label: "Back to Courses",
@@ -63,31 +72,63 @@ export default function CreateCoursePage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
         <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label
-                htmlFor="title"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Course title
-              </label>
-              <input
-                id="title"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
-                placeholder="Enter course title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Course Name / Code
+                </label>
+                <input
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="e.g. CPE 321"
+                  value={courseCode}
+                  onChange={(e) => setCourseCode(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Course Title
+                </label>
+                <input
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="e.g. Embedded Systems"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Program
+                </label>
+                <input
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="e.g. BSCPE, BSIT, BSCS"
+                  value={program}
+                  onChange={(e) => setProgram(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Section
+                </label>
+                <input
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="e.g. BSCPE-3A"
+                  value={section}
+                  onChange={(e) => setSection(e.target.value)}
+                />
+              </div>
             </div>
 
             <div>
-              <label
-                htmlFor="description"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Course description
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Course Description
               </label>
               <textarea
-                id="description"
                 className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                 placeholder="Describe the course content and purpose"
                 rows={7}
@@ -119,25 +160,23 @@ export default function CreateCoursePage() {
 
           <div className="mt-6 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="font-semibold">Use a clear title</p>
+              <p className="font-semibold">Use a clear code and title</p>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                Keep the title specific so students can identify the subject
-                easily.
+                Example: CPE 321 — Embedded Systems.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="font-semibold">Write a concise description</p>
+              <p className="font-semibold">Match the correct group</p>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                Include the course focus, expected learning topics, or scope.
+                Set the intended program and section for cleaner organization.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="font-semibold">Continue after creation</p>
+              <p className="font-semibold">You can edit this later</p>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                After creating the course, add materials, quizzes, and analytics
-                access from the course page.
+                The course settings page lets you update these fields later.
               </p>
             </div>
           </div>

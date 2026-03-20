@@ -34,6 +34,9 @@ export async function POST(req: Request) {
       avoidRepeatedQuestions?: boolean;
       quizType?: QuizType;
       adaptiveMode?: boolean;
+      opensAt?: string | null;
+      closesAt?: string | null;
+      attemptTimeLimitMinutes?: number | null;
     };
 
     const {
@@ -46,6 +49,9 @@ export async function POST(req: Request) {
       avoidRepeatedQuestions,
       quizType,
       adaptiveMode,
+      opensAt,
+      closesAt,
+      attemptTimeLimitMinutes,
     } = body;
 
     if (!courseId || !title?.trim()) {
@@ -70,6 +76,24 @@ export async function POST(req: Request) {
       );
     }
 
+    const opensAtDate = opensAt ? new Date(opensAt) : null;
+    const closesAtDate = closesAt ? new Date(closesAt) : null;
+
+    if (opensAtDate && Number.isNaN(opensAtDate.getTime())) {
+      return NextResponse.json({ error: "Invalid open date/time." }, { status: 400 });
+    }
+
+    if (closesAtDate && Number.isNaN(closesAtDate.getTime())) {
+      return NextResponse.json({ error: "Invalid close date/time." }, { status: 400 });
+    }
+
+    if (opensAtDate && closesAtDate && closesAtDate <= opensAtDate) {
+      return NextResponse.json(
+        { error: "Close date/time must be after the open date/time." },
+        { status: 400 }
+      );
+    }
+
     const quiz = await prisma.quiz.create({
       data: {
         courseId,
@@ -84,6 +108,12 @@ export async function POST(req: Request) {
         avoidRepeatedQuestions: avoidRepeatedQuestions ?? true,
         quizType: quizType ?? "MULTIPLE_CHOICE",
         adaptiveMode: adaptiveMode ?? false,
+        opensAt: opensAtDate,
+        closesAt: closesAtDate,
+        attemptTimeLimitMinutes:
+          attemptTimeLimitMinutes && attemptTimeLimitMinutes > 0
+            ? attemptTimeLimitMinutes
+            : null,
       },
     });
 

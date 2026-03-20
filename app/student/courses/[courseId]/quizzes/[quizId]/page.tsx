@@ -51,6 +51,36 @@ export default async function StudentTakeQuizPage({
     redirect("/student/courses");
   }
 
+  const now = new Date();
+
+  if (quiz.opensAt && now < quiz.opensAt) {
+    return (
+      <main className="min-h-screen p-8">
+        <h1 className="text-3xl font-bold">{quiz.title}</h1>
+        <p className="mt-4 text-gray-600">
+          This quiz is not yet open.
+        </p>
+        <p className="mt-2 text-sm text-gray-500">
+          Opens on: {quiz.opensAt.toLocaleString()}
+        </p>
+      </main>
+    );
+  }
+
+  if (quiz.closesAt && now > quiz.closesAt) {
+    return (
+      <main className="min-h-screen p-8">
+        <h1 className="text-3xl font-bold">{quiz.title}</h1>
+        <p className="mt-4 text-red-600">
+          This quiz is already closed.
+        </p>
+        <p className="mt-2 text-sm text-gray-500">
+          Closed on: {quiz.closesAt.toLocaleString()}
+        </p>
+      </main>
+    );
+  }
+
   if (quiz.attempts.length >= quiz.maxAttempts) {
     return (
       <main className="min-h-screen p-8">
@@ -63,7 +93,14 @@ export default async function StudentTakeQuizPage({
   }
 
   if (quiz.adaptiveMode) {
-    return <AdaptiveQuizClient quizId={quiz.id} courseId={courseId} />;
+    return (
+      <AdaptiveQuizClient
+        quizId={quiz.id}
+        courseId={courseId}
+        title={quiz.title}
+        description={quiz.description}
+      />
+    );
   }
 
   const seenQuestionIds = Array.from(
@@ -83,12 +120,16 @@ export default async function StudentTakeQuizPage({
 
   return (
     <TakeQuizClient
+      courseId={courseId}
       quiz={{
         id: quiz.id,
         title: quiz.title,
         description: quiz.description,
         shuffleOptions: quiz.shuffleOptions,
         quizType: quiz.quizType,
+        attemptTimeLimitMinutes: quiz.attemptTimeLimitMinutes,
+        opensAt: quiz.opensAt ? quiz.opensAt.toISOString() : null,
+        closesAt: quiz.closesAt ? quiz.closesAt.toISOString() : null,
         questions: selectedQuestions.map((q) => ({
           id: q.id,
           questionText: q.questionText,

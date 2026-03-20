@@ -83,7 +83,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100">
       <div className="mx-auto flex min-h-screen max-w-7xl items-center justify-center px-6 py-10">
         <div className="w-full max-w-3xl rounded-3xl border border-gray-200 bg-white shadow-2xl">
           <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">

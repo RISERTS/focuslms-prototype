@@ -27,6 +27,9 @@ export default function AddQuestionPage() {
   const [loading, setLoading] = useState(false);
 
   const isMCQ = questionType === "MULTIPLE_CHOICE";
+  const isEssay = questionType === "ESSAY";
+  const needsExpectedAnswer =
+    questionType === "IDENTIFICATION" || questionType === "COMPUTATIONAL";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +50,7 @@ export default function AddQuestionPage() {
           optionB: isMCQ ? optionB : null,
           optionC: isMCQ ? optionC : null,
           optionD: isMCQ ? optionD : null,
-          correctAnswer,
+          correctAnswer: isEssay ? null : correctAnswer,
           difficulty,
           timeThresholdSeconds,
         }),
@@ -115,7 +118,18 @@ export default function AddQuestionPage() {
                   id="questionType"
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                   value={questionType}
-                  onChange={(e) => setQuestionType(e.target.value)}
+                  onChange={(e) => {
+                    const nextType = e.target.value;
+                    setQuestionType(nextType);
+
+                    if (nextType === "MULTIPLE_CHOICE") {
+                      setCorrectAnswer("A");
+                    } else if (nextType === "ESSAY") {
+                      setCorrectAnswer("");
+                    } else {
+                      setCorrectAnswer("");
+                    }
+                  }}
                 >
                   <option value="MULTIPLE_CHOICE">Multiple Choice</option>
                   <option value="IDENTIFICATION">Identification</option>
@@ -191,7 +205,7 @@ export default function AddQuestionPage() {
                   </select>
                 </div>
               </div>
-            ) : (
+            ) : needsExpectedAnswer ? (
               <div>
                 <label
                   htmlFor="expectedAnswer"
@@ -207,7 +221,7 @@ export default function AddQuestionPage() {
                   onChange={(e) => setCorrectAnswer(e.target.value)}
                 />
               </div>
-            )}
+            ) : null}
 
             <div>
               <label
@@ -259,8 +273,8 @@ export default function AddQuestionPage() {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="font-semibold">Match the type</p>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                Multiple choice needs options, while identification and essay use
-                direct answers.
+                Multiple choice needs options. Identification and computational
+                need expected answers. Essay uses manual review.
               </p>
             </div>
 

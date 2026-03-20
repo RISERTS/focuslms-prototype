@@ -10,6 +10,8 @@ type QuizType =
   | "COMPUTATIONAL"
   | "MIXED";
 
+type CloseMode = "none" | "specific" | "duration";
+
 type Props = {
   courseId: string;
   quizId: string;
@@ -22,12 +24,29 @@ type Props = {
     shuffleOptions: boolean;
     avoidRepeatedQuestions: boolean;
     adaptiveMode: boolean;
+    opensAt: string | null;
+    closesAt: string | null;
+    attemptTimeLimitMinutes: number | null;
   };
 };
 
 type ApiResponse = {
   error?: string;
 };
+
+function isoToLocalInput(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
+  return localDate.toISOString().slice(0, 16);
+}
+
+function toIsoOrNull(value: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
 
 export default function EditQuizSettingsForm({
   courseId,
@@ -50,13 +69,72 @@ export default function EditQuizSettingsForm({
     initialData.avoidRepeatedQuestions
   );
   const [adaptiveMode, setAdaptiveMode] = useState(initialData.adaptiveMode);
+
+  const [opensAtLocal, setOpensAtLocal] = useState(
+    isoToLocalInput(initialData.opensAt)
+  );
+  const [closesAtLocal, setClosesAtLocal] = useState(
+    isoToLocalInput(initialData.closesAt)
+  );
+  const [attemptTimeLimitMinutes, setAttemptTimeLimitMinutes] = useState<number | "">(
+    initialData.attemptTimeLimitMinutes ?? ""
+  );
+
+  const [closeMode, setCloseMode] = useState<CloseMode>(
+    initialData.opensAt && initialData.closesAt ? "specific" : "none"
+  );
+  const [availabilityDurationMinutes, setAvailabilityDurationMinutes] = useState<number | "">("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  function buildSchedule() {
+    const opensAt = toIsoOrNull(opensAtLocal);
+
+    if (!opensAtLocal) {
+      return {
+        opensAt: null as string | null,
+        closesAt: null as string | null,
+      };
+    }
+
+    if (closeMode === "specific") {
+      return {
+        opensAt,
+        closesAt: toIsoOrNull(closesAtLocal),
+      };
+    }
+
+    if (closeMode === "duration") {
+      if (!availabilityDurationMinutes || !opensAt) {
+        return {
+          opensAt,
+          closesAt: null as string | null,
+        };
+      }
+
+      const closeDate = new Date(
+        new Date(opensAt).getTime() + Number(availabilityDurationMinutes) * 60 * 1000
+      );
+
+      return {
+        opensAt,
+        closesAt: closeDate.toISOString(),
+      };
+    }
+
+    return {
+      opensAt,
+      closesAt: null as string | null,
+    };
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    const schedule = buildSchedule();
 
     try {
       const res = await fetch(`/api/quizzes/${quizId}`, {
@@ -74,6 +152,10 @@ export default function EditQuizSettingsForm({
           shuffleOptions,
           avoidRepeatedQuestions,
           adaptiveMode,
+          opensAt: schedule.opensAt,
+          closesAt: schedule.closesAt,
+          attemptTimeLimitMinutes:
+            attemptTimeLimitMinutes === "" ? null : Number(attemptTimeLimitMinutes),
         }),
       });
 
@@ -97,52 +179,38 @@ export default function EditQuizSettingsForm({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
       <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label
-              htmlFor="title"
-              className="mb-2 block text-sm font-medium text-gray-700"
-            >
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Quiz title
             </label>
             <input
-              id="title"
               className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter quiz title"
             />
           </div>
 
           <div>
-            <label
-              htmlFor="description"
-              className="mb-2 block text-sm font-medium text-gray-700"
-            >
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Quiz description
             </label>
             <textarea
-              id="description"
               rows={5}
               className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe this quiz"
             />
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <label
-                htmlFor="quizType"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Quiz type
               </label>
               <select
-                id="quizType"
                 className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                 value={quizType}
                 onChange={(e) => setQuizType(e.target.value as QuizType)}
@@ -156,14 +224,10 @@ export default function EditQuizSettingsForm({
             </div>
 
             <div>
-              <label
-                htmlFor="maxAttempts"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Maximum attempts
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Max attempts
               </label>
               <input
-                id="maxAttempts"
                 type="number"
                 min={1}
                 className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
@@ -173,26 +237,108 @@ export default function EditQuizSettingsForm({
             </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="questionsPerAttempt"
-              className="mb-2 block text-sm font-medium text-gray-700"
-            >
-              Items per attempt
-            </label>
-            <input
-              id="questionsPerAttempt"
-              type="number"
-              min={1}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
-              value={questionsPerAttempt}
-              onChange={(e) =>
-                setQuestionsPerAttempt(
-                  e.target.value === "" ? "" : Number(e.target.value)
-                )
-              }
-              placeholder="Leave blank to use all questions"
-            />
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Items per attempt
+              </label>
+              <input
+                type="number"
+                min={1}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                value={questionsPerAttempt}
+                onChange={(e) =>
+                  setQuestionsPerAttempt(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Attempt time limit (minutes)
+              </label>
+              <input
+                type="number"
+                min={1}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                value={attemptTimeLimitMinutes}
+                onChange={(e) =>
+                  setAttemptTimeLimitMinutes(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
+              Quiz Availability
+            </p>
+
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Open date and time
+                </label>
+                <input
+                  type="datetime-local"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  value={opensAtLocal}
+                  onChange={(e) => setOpensAtLocal(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Close mode
+                </label>
+                <select
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  value={closeMode}
+                  onChange={(e) => setCloseMode(e.target.value as CloseMode)}
+                >
+                  <option value="none">No close schedule</option>
+                  <option value="specific">Set exact close date/time</option>
+                  <option value="duration">Use duration after opening</option>
+                </select>
+              </div>
+
+              {closeMode === "specific" && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Close date and time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                    value={closesAtLocal}
+                    onChange={(e) => setClosesAtLocal(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {closeMode === "duration" && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Availability duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                    value={availabilityDurationMinutes}
+                    onChange={(e) =>
+                      setAvailabilityDurationMinutes(
+                        e.target.value === "" ? "" : Number(e.target.value)
+                      )
+                    }
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-3">
@@ -248,31 +394,21 @@ export default function EditQuizSettingsForm({
 
       <div className="rounded-3xl border border-gray-200 bg-black p-8 text-white shadow-xl">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-300">
-          Settings Notes
+          Timing Notes
         </p>
 
         <div className="mt-6 space-y-4">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="font-semibold">Items per attempt</p>
+            <p className="font-semibold">Availability window</p>
             <p className="mt-2 text-sm leading-6 text-gray-300">
-              This controls how many items the student answers in one take,
-              not the total question bank size.
+              Students can only open and submit the quiz during the allowed schedule.
             </p>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="font-semibold">Adaptive mode</p>
+            <p className="font-semibold">Attempt timer</p>
             <p className="mt-2 text-sm leading-6 text-gray-300">
-              Adaptive progression uses correctness and response time to choose
-              the next difficulty level.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="font-semibold">Retake controls</p>
-            <p className="mt-2 text-sm leading-6 text-gray-300">
-              Shuffle and repeat-avoidance help reduce memorization across
-              multiple quiz attempts.
+              This limits how long a single student attempt can last.
             </p>
           </div>
         </div>

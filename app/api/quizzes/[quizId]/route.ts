@@ -38,6 +38,9 @@ export async function PATCH(
       shuffleOptions?: boolean;
       avoidRepeatedQuestions?: boolean;
       adaptiveMode?: boolean;
+      opensAt?: string | null;
+      closesAt?: string | null;
+      attemptTimeLimitMinutes?: number | null;
     };
 
     const quiz = await prisma.quiz.findUnique({
@@ -65,25 +68,20 @@ export async function PATCH(
       );
     }
 
-    if (
-      body.maxAttempts === undefined ||
-      Number.isNaN(Number(body.maxAttempts)) ||
-      Number(body.maxAttempts) < 1
-    ) {
-      return NextResponse.json(
-        { error: "Maximum attempts must be at least 1." },
-        { status: 400 }
-      );
+    const opensAtDate = body.opensAt ? new Date(body.opensAt) : null;
+    const closesAtDate = body.closesAt ? new Date(body.closesAt) : null;
+
+    if (opensAtDate && Number.isNaN(opensAtDate.getTime())) {
+      return NextResponse.json({ error: "Invalid open date/time." }, { status: 400 });
     }
 
-    if (
-      body.questionsPerAttempt !== null &&
-      body.questionsPerAttempt !== undefined &&
-      (Number.isNaN(Number(body.questionsPerAttempt)) ||
-        Number(body.questionsPerAttempt) < 1)
-    ) {
+    if (closesAtDate && Number.isNaN(closesAtDate.getTime())) {
+      return NextResponse.json({ error: "Invalid close date/time." }, { status: 400 });
+    }
+
+    if (opensAtDate && closesAtDate && closesAtDate <= opensAtDate) {
       return NextResponse.json(
-        { error: "Items per attempt must be at least 1." },
+        { error: "Close date/time must be after the open date/time." },
         { status: 400 }
       );
     }
@@ -94,16 +92,24 @@ export async function PATCH(
         title: body.title.trim(),
         description: body.description?.trim() || null,
         quizType: body.quizType ?? quiz.quizType,
-        maxAttempts: Number(body.maxAttempts),
+        maxAttempts:
+          body.maxAttempts && body.maxAttempts > 0
+            ? Number(body.maxAttempts)
+            : quiz.maxAttempts,
         questionsPerAttempt:
-          body.questionsPerAttempt === null ||
-          body.questionsPerAttempt === undefined
+          body.questionsPerAttempt === null || body.questionsPerAttempt === undefined
             ? null
             : Number(body.questionsPerAttempt),
         shuffleOptions: body.shuffleOptions ?? quiz.shuffleOptions,
         avoidRepeatedQuestions:
           body.avoidRepeatedQuestions ?? quiz.avoidRepeatedQuestions,
         adaptiveMode: body.adaptiveMode ?? quiz.adaptiveMode,
+        opensAt: opensAtDate,
+        closesAt: closesAtDate,
+        attemptTimeLimitMinutes:
+          body.attemptTimeLimitMinutes && body.attemptTimeLimitMinutes > 0
+            ? Number(body.attemptTimeLimitMinutes)
+            : null,
       },
     });
 

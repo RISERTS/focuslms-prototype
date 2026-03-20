@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       optionB?: string | null;
       optionC?: string | null;
       optionD?: string | null;
-      correctAnswer?: string;
+      correctAnswer?: string | null;
       difficulty?: Difficulty;
       timeThresholdSeconds?: number;
     };
@@ -50,7 +50,13 @@ export async function POST(req: Request) {
       timeThresholdSeconds,
     } = body;
 
-    if (!quizId || !questionText?.trim() || !questionType || !correctAnswer?.trim() || !difficulty || !timeThresholdSeconds) {
+    if (
+      !quizId ||
+      !questionText?.trim() ||
+      !questionType ||
+      !difficulty ||
+      !timeThresholdSeconds
+    ) {
       return NextResponse.json(
         { error: "Required question fields are missing." },
         { status: 400 }
@@ -59,10 +65,23 @@ export async function POST(req: Request) {
 
     if (
       questionType === "MULTIPLE_CHOICE" &&
-      (!optionA?.trim() || !optionB?.trim() || !optionC?.trim() || !optionD?.trim())
+      (!optionA?.trim() ||
+        !optionB?.trim() ||
+        !optionC?.trim() ||
+        !optionD?.trim())
     ) {
       return NextResponse.json(
         { error: "All four options are required for multiple choice questions." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      questionType !== "ESSAY" &&
+      (!correctAnswer || !correctAnswer.trim())
+    ) {
+      return NextResponse.json(
+        { error: "Correct answer is required for this question type." },
         { status: 400 }
       );
     }
@@ -92,7 +111,8 @@ export async function POST(req: Request) {
         optionB: optionB?.trim() || null,
         optionC: optionC?.trim() || null,
         optionD: optionD?.trim() || null,
-        correctAnswer: correctAnswer.trim(),
+        correctAnswer:
+            questionType === "ESSAY" ? "" : correctAnswer?.trim() || "",
         difficulty,
         timeThresholdSeconds: Number(timeThresholdSeconds),
       },

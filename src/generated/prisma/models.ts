@@ -10,9 +10,9 @@
  */
 export type * from './models/User'
 export type * from './models/Course'
+export type * from './models/Quiz'
 export type * from './models/Enrollment'
 export type * from './models/Material'
-export type * from './models/Quiz'
 export type * from './models/Question'
 export type * from './models/QuizAttempt'
 export type * from './models/ActivityLog'

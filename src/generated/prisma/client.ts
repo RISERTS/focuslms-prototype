@@ -52,6 +52,11 @@ export type User = Prisma.UserModel
  */
 export type Course = Prisma.CourseModel
 /**
+ * Model Quiz
+ * 
+ */
+export type Quiz = Prisma.QuizModel
+/**
  * Model Enrollment
  * 
  */
@@ -61,11 +66,6 @@ export type Enrollment = Prisma.EnrollmentModel
  * 
  */
 export type Material = Prisma.MaterialModel
-/**
- * Model Quiz
- * 
- */
-export type Quiz = Prisma.QuizModel
 /**
  * Model Question
  * 

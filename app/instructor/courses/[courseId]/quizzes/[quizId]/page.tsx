@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
@@ -155,6 +154,12 @@ export default async function InstructorQuizDetailPage({
                       Correct Answer: {question.correctAnswer}
                     </p>
                   </div>
+                ) : question.questionType === "ESSAY" ? (
+                  <p className="mt-4 text-sm text-gray-700">
+                    <span className="font-medium text-gray-900">
+                      Manual review required
+                    </span>
+                  </p>
                 ) : (
                   <p className="mt-4 text-sm text-gray-700">
                     Expected Answer:{" "}

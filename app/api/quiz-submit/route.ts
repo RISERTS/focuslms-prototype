@@ -33,10 +33,11 @@ export async function POST(req: Request) {
 
     const body = (await req.json()) as {
       quizId?: string;
+      totalElapsedSeconds?: number;
       answers?: SubmittedAnswer[];
     };
 
-    const { quizId, answers } = body;
+    const { quizId, totalElapsedSeconds, answers } = body;
 
     if (!quizId || !answers?.length) {
       return NextResponse.json(
@@ -62,6 +63,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Quiz not found." }, { status: 404 });
     }
 
+    const now = new Date();
+
+    if (quiz.opensAt && now < quiz.opensAt) {
+      return NextResponse.json(
+        { error: "This quiz is not yet open." },
+        { status: 403 }
+      );
+    }
+
+    if (quiz.closesAt && now > quiz.closesAt) {
+      return NextResponse.json(
+        { error: "This quiz is already closed." },
+        { status: 403 }
+      );
+    }
+
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
@@ -81,6 +98,17 @@ export async function POST(req: Request) {
     if (quiz.attempts.length >= quiz.maxAttempts) {
       return NextResponse.json(
         { error: "Maximum quiz attempts reached." },
+        { status: 403 }
+      );
+    }
+
+    if (
+      quiz.attemptTimeLimitMinutes &&
+      typeof totalElapsedSeconds === "number" &&
+      totalElapsedSeconds > quiz.attemptTimeLimitMinutes * 60
+    ) {
+      return NextResponse.json(
+        { error: "Attempt time limit exceeded." },
         { status: 403 }
       );
     }
@@ -106,18 +134,15 @@ export async function POST(req: Request) {
 
       let isCorrect = false;
       let isAutoGradable = true;
+      const expected = question.correctAnswer ?? "";
 
       if (question.questionType === "MULTIPLE_CHOICE") {
-        isCorrect = question.correctAnswer === answer.selectedAnswer;
+        isCorrect = expected === answer.selectedAnswer;
       } else if (question.questionType === "IDENTIFICATION") {
         isCorrect =
-          normalizeText(question.correctAnswer) ===
-          normalizeText(answer.selectedAnswer);
+          normalizeText(expected) === normalizeText(answer.selectedAnswer);
       } else if (question.questionType === "COMPUTATIONAL") {
-        isCorrect = isComputationalMatch(
-          question.correctAnswer,
-          answer.selectedAnswer
-        );
+        isCorrect = isComputationalMatch(expected, answer.selectedAnswer);
       } else {
         isAutoGradable = false;
         isCorrect = false;
@@ -162,10 +187,10 @@ export async function POST(req: Request) {
         courseId: quiz.courseId,
         actionType: "SUBMIT_QUIZ",
         targetId: quiz.id,
-        durationSeconds: validRows.reduce(
-          (sum, row) => sum + row.responseTimeSeconds,
-          0
-        ),
+        durationSeconds:
+          typeof totalElapsedSeconds === "number"
+            ? totalElapsedSeconds
+            : validRows.reduce((sum, row) => sum + row.responseTimeSeconds, 0),
       },
     });
 
