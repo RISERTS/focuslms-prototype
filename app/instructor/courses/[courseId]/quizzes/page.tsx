@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
+import InstructorShell from "@/components/instructor/InstructorShell";
 
 export default async function InstructorQuizListPage({
   params,
@@ -21,7 +22,12 @@ export default async function InstructorQuizListPage({
     include: {
       quizzes: {
         include: {
-          questions: true,
+          _count: {
+            select: {
+              questions: true,
+              attempts: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
@@ -35,44 +41,82 @@ export default async function InstructorQuizListPage({
   }
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{course.title} - Quizzes</h1>
-          <p className="mt-2 text-gray-600">
-            {course.description || "No description"}
+    <InstructorShell
+      title={`${course.title} Quizzes`}
+      description="Create, review, and manage quizzes for this course."
+      actions={[
+        {
+          label: "Back to Course",
+          href: `/instructor/courses/${course.id}`,
+          variant: "secondary",
+        },
+        {
+          label: "Create Quiz",
+          href: `/instructor/courses/${course.id}/quizzes/create`,
+          variant: "primary",
+        },
+      ]}
+    >
+      {course.quizzes.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center shadow-sm">
+          <p className="text-xl font-semibold">No quizzes yet</p>
+          <p className="mt-3 text-sm text-gray-600">
+            Create the first quiz for this course.
           </p>
         </div>
-
-        <Link
-          href={`/instructor/courses/${course.id}/quizzes/create`}
-          className="rounded bg-black px-4 py-2 text-white"
-        >
-          Create Quiz
-        </Link>
-      </div>
-
-      <div className="mt-8 space-y-4">
-        {course.quizzes.length === 0 ? (
-          <p>No quizzes yet.</p>
-        ) : (
-          course.quizzes.map((quiz) => (
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {course.quizzes.map((quiz) => (
             <Link
               key={quiz.id}
               href={`/instructor/courses/${course.id}/quizzes/${quiz.id}`}
-              className="block rounded border p-4"
+              className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <h2 className="text-xl font-semibold">{quiz.title}</h2>
-              <p className="mt-2 text-gray-600">
-                {quiz.description || "No description"}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Questions: {quiz.questions.length}
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-lg font-semibold">{quiz.title}</p>
+                  <p className="mt-2 text-sm leading-6 text-gray-600">
+                    {quiz.description || "No description"}
+                  </p>
+                </div>
+
+                <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">
+                  {quiz.quizType}
+                </span>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-gray-50 p-3 text-center">
+                  <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
+                    Questions
+                  </p>
+                  <p className="mt-2 text-xl font-bold">
+                    {quiz._count.questions}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-gray-50 p-3 text-center">
+                  <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
+                    Attempts
+                  </p>
+                  <p className="mt-2 text-xl font-bold">
+                    {quiz._count.attempts}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2 text-xs text-gray-600">
+                <span className="rounded-full border border-gray-300 px-3 py-1">
+                  Max Attempts: {quiz.maxAttempts}
+                </span>
+                <span className="rounded-full border border-gray-300 px-3 py-1">
+                  Adaptive: {quiz.adaptiveMode ? "Yes" : "No"}
+                </span>
+              </div>
             </Link>
-          ))
-        )}
-      </div>
-    </main>
+          ))}
+        </div>
+      )}
+    </InstructorShell>
   );
 }

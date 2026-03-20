@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import { computeBEI } from "@/lib/bei";
+import InstructorShell from "@/components/instructor/InstructorShell";
 
 export default async function InstructorCourseAnalyticsPage({
   params,
@@ -175,110 +176,96 @@ export default async function InstructorCourseAnalyticsPage({
       : 0;
 
   const overallBEI =
-    rows.length > 0
-      ? rows.reduce((sum, row) => sum + row.bei, 0) / rows.length
-      : 0;
+    rows.length > 0 ? rows.reduce((sum, row) => sum + row.bei, 0) / rows.length : 0;
 
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold">{course.title} - Analytics</h1>
-      <p className="mt-2 text-gray-600">
-        {course.enrollments.length} student(s) enrolled
-      </p>
-
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
-        <div className="rounded border p-4">
-          <p className="text-sm text-gray-500">Average Score</p>
-          <p className="mt-2 text-2xl font-semibold">
+    <InstructorShell
+      title={`${course.title} Analytics`}
+      description="Monitor learner performance, engagement, completion, and Behavioral Engagement Index (BEI)."
+      actions={[
+        {
+          label: "Back to Course",
+          href: `/instructor/courses/${course.id}`,
+          variant: "secondary",
+        },
+      ]}
+    >
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
+            Average Score
+          </p>
+          <p className="mt-3 text-3xl font-bold">
             {overallAverageScore.toFixed(2)}%
           </p>
         </div>
 
-        <div className="rounded border p-4">
-          <p className="text-sm text-gray-500">Average Completion Rate</p>
-          <p className="mt-2 text-2xl font-semibold">
+        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
+            Completion Rate
+          </p>
+          <p className="mt-3 text-3xl font-bold">
             {(overallCompletionRate * 100).toFixed(2)}%
           </p>
         </div>
 
-        <div className="rounded border p-4">
-          <p className="text-sm text-gray-500">Average BEI</p>
-          <p className="mt-2 text-2xl font-semibold">
-            {overallBEI.toFixed(2)}
+        <div className="rounded-3xl border border-gray-200 bg-black p-6 text-white shadow-xl">
+          <p className="text-sm uppercase tracking-[0.2em] text-gray-300">
+            Average BEI
           </p>
+          <p className="mt-3 text-3xl font-bold">{overallBEI.toFixed(2)}</p>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <div className="rounded border p-4">
-          <p className="text-sm text-gray-500">Total Quizzes</p>
-          <p className="mt-2 text-2xl font-semibold">{course.quizzes.length}</p>
-        </div>
+      <div className="mt-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-2xl font-bold">Student Analytics</h2>
 
-        <div className="rounded border p-4">
-          <p className="text-sm text-gray-500">Total Materials</p>
-          <p className="mt-2 text-2xl font-semibold">
-            {course.materials.length}
-          </p>
-        </div>
-
-        <div className="rounded border p-4">
-          <p className="text-sm text-gray-500">Total Students</p>
-          <p className="mt-2 text-2xl font-semibold">
-            {course.enrollments.length}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-10 overflow-x-auto">
-        <table className="min-w-full border text-sm">
-          <thead>
-            <tr className="border-b bg-gray-50">
-              <th className="p-3 text-left">Student</th>
-              <th className="p-3 text-left">Avg Score</th>
-              <th className="p-3 text-left">Completion</th>
-              <th className="p-3 text-left">Time-on-Task</th>
-              <th className="p-3 text-left">Interactions</th>
-              <th className="p-3 text-left">Materials Opened</th>
-              <th className="p-3 text-left">Quizzes Submitted</th>
-              <th className="p-3 text-left">NT</th>
-              <th className="p-3 text-left">NCR</th>
-              <th className="p-3 text-left">NIF</th>
-              <th className="p-3 text-left">BEI</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={11} className="p-4 text-center">
-                  No student analytics available yet.
-                </td>
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 text-left text-gray-500">
+                <th className="px-3 py-3">Student</th>
+                <th className="px-3 py-3">Avg Score</th>
+                <th className="px-3 py-3">Completion</th>
+                <th className="px-3 py-3">Time-on-Task</th>
+                <th className="px-3 py-3">Interactions</th>
+                <th className="px-3 py-3">Materials Opened</th>
+                <th className="px-3 py-3">Quizzes Submitted</th>
+                <th className="px-3 py-3">BEI</th>
               </tr>
-            ) : (
-              rows.map((row) => (
-                <tr key={row.studentId} className="border-b">
-                  <td className="p-3">
-                    <div className="font-medium">{row.name}</div>
-                    <div className="text-gray-500">{row.email}</div>
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-3 py-6 text-center text-gray-600">
+                    No student analytics available yet.
                   </td>
-                  <td className="p-3">{row.averageScore.toFixed(2)}%</td>
-                  <td className="p-3">
-                    {(row.completionRate * 100).toFixed(2)}%
-                  </td>
-                  <td className="p-3">{row.timeOnTaskSeconds}s</td>
-                  <td className="p-3">{row.interactionCount}</td>
-                  <td className="p-3">{row.materialsOpened}</td>
-                  <td className="p-3">{row.quizzesSubmitted}</td>
-                  <td className="p-3">{row.nt.toFixed(2)}</td>
-                  <td className="p-3">{row.ncr.toFixed(2)}</td>
-                  <td className="p-3">{row.nif.toFixed(2)}</td>
-                  <td className="p-3 font-semibold">{row.bei.toFixed(2)}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.studentId} className="border-b border-gray-100">
+                    <td className="px-3 py-4">
+                      <div className="font-medium">{row.name}</div>
+                      <div className="text-gray-500">{row.email}</div>
+                    </td>
+                    <td className="px-3 py-4">{row.averageScore.toFixed(2)}%</td>
+                    <td className="px-3 py-4">
+                      {(row.completionRate * 100).toFixed(2)}%
+                    </td>
+                    <td className="px-3 py-4">{row.timeOnTaskSeconds}s</td>
+                    <td className="px-3 py-4">{row.interactionCount}</td>
+                    <td className="px-3 py-4">{row.materialsOpened}</td>
+                    <td className="px-3 py-4">{row.quizzesSubmitted}</td>
+                    <td className="px-3 py-4 font-semibold">
+                      {row.bei.toFixed(2)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </main>
+    </InstructorShell>
   );
 }

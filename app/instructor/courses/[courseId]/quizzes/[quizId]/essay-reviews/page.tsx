@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import EssayReviewForm from "@/components/EssayReviewForm";
+import InstructorShell from "@/components/instructor/InstructorShell";
 
 export default async function EssayReviewsPage({
   params,
@@ -23,7 +24,11 @@ export default async function EssayReviewsPage({
     },
   });
 
-  if (!quiz || quiz.courseId !== courseId || quiz.course.instructorId !== session.userId) {
+  if (
+    !quiz ||
+    quiz.courseId !== courseId ||
+    quiz.course.instructorId !== session.userId
+  ) {
     redirect("/login");
   }
 
@@ -54,27 +59,54 @@ export default async function EssayReviewsPage({
   });
 
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold">{quiz.title} - Essay Reviews</h1>
+    <InstructorShell
+      title={`${quiz.title} Essay Reviews`}
+      description="Review submitted essay responses, add instructor feedback, and assign manual scores."
+      actions={[
+        {
+          label: "Back to Quiz",
+          href: `/instructor/courses/${courseId}/quizzes/${quizId}`,
+          variant: "secondary",
+        },
+      ]}
+    >
+      {essayAnswers.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center shadow-sm">
+          <p className="text-xl font-semibold">No essay answers submitted yet</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {essayAnswers.map((answer) => (
+            <div
+              key={answer.id}
+              className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm"
+            >
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-lg font-semibold">{answer.question.questionText}</p>
+                  <div className="mt-3 text-sm text-gray-500">
+                    <p>
+                      Student: {answer.attempt.student.name} (
+                      {answer.attempt.student.email})
+                    </p>
+                    <p>
+                      Submitted: {new Date(answer.answeredAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
 
-      <div className="mt-8 space-y-6">
-        {essayAnswers.length === 0 ? (
-          <p>No essay answers submitted yet.</p>
-        ) : (
-          essayAnswers.map((answer) => (
-            <div key={answer.id} className="rounded border p-4">
-              <p className="font-semibold">{answer.question.questionText}</p>
-
-              <div className="mt-3 text-sm text-gray-500">
-                <p>
-                  Student: {answer.attempt.student.name} ({answer.attempt.student.email})
-                </p>
-                <p>Submitted: {new Date(answer.answeredAt).toLocaleString()}</p>
+                <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">
+                  ESSAY
+                </span>
               </div>
 
-              <div className="mt-4 rounded bg-gray-50 p-4">
-                <p className="text-sm font-medium text-gray-600">Student Answer</p>
-                <p className="mt-2 whitespace-pre-wrap">{answer.selectedAnswer}</p>
+              <div className="mt-6 rounded-2xl bg-gray-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                  Student Answer
+                </p>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-gray-700">
+                  {answer.selectedAnswer}
+                </p>
               </div>
 
               <EssayReviewForm
@@ -83,9 +115,9 @@ export default async function EssayReviewsPage({
                 initialFeedback={answer.instructorFeedback}
               />
             </div>
-          ))
-        )}
-      </div>
-    </main>
+          ))}
+        </div>
+      )}
+    </InstructorShell>
   );
 }

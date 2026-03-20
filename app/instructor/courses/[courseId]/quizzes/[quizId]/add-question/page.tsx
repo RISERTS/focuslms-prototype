@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import InstructorShell from "@/components/instructor/InstructorShell";
 
 type ApiErrorResponse = {
   error?: string;
@@ -71,73 +72,207 @@ export default function AddQuestionPage() {
   }
 
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold">Add Question Manually</h1>
+    <InstructorShell
+      title="Add Question"
+      description="Create a new question manually and attach it to this quiz."
+      actions={[
+        {
+          label: "Back to Quiz",
+          href: `/instructor/courses/${courseId}/quizzes/${quizId}`,
+          variant: "secondary",
+        },
+      ]}
+    >
+      <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label
+                htmlFor="questionText"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
+                Question text
+              </label>
+              <textarea
+                id="questionText"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                rows={5}
+                placeholder="Enter your question"
+                value={questionText}
+                onChange={(e) => setQuestionText(e.target.value)}
+              />
+            </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 max-w-2xl space-y-4">
-        <textarea
-          className="w-full rounded border p-3"
-          placeholder="Question text"
-          rows={4}
-          value={questionText}
-          onChange={(e) => setQuestionText(e.target.value)}
-        />
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="questionType"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Question type
+                </label>
+                <select
+                  id="questionType"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  value={questionType}
+                  onChange={(e) => setQuestionType(e.target.value)}
+                >
+                  <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+                  <option value="IDENTIFICATION">Identification</option>
+                  <option value="ESSAY">Essay</option>
+                  <option value="COMPUTATIONAL">Computational</option>
+                </select>
+              </div>
 
-        <select
-          className="w-full rounded border p-3"
-          value={questionType}
-          onChange={(e) => setQuestionType(e.target.value)}
-        >
-          <option value="MULTIPLE_CHOICE">Multiple Choice</option>
-          <option value="IDENTIFICATION">Identification</option>
-          <option value="ESSAY">Essay</option>
-          <option value="COMPUTATIONAL">Computational</option>
-        </select>
+              <div>
+                <label
+                  htmlFor="difficulty"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Difficulty
+                </label>
+                <select
+                  id="difficulty"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                >
+                  <option value="EASY">Easy</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HARD">Hard</option>
+                </select>
+              </div>
+            </div>
 
-        {isMCQ ? (
-          <>
-            <input className="w-full rounded border p-3" placeholder="Option A" value={optionA} onChange={(e) => setOptionA(e.target.value)} />
-            <input className="w-full rounded border p-3" placeholder="Option B" value={optionB} onChange={(e) => setOptionB(e.target.value)} />
-            <input className="w-full rounded border p-3" placeholder="Option C" value={optionC} onChange={(e) => setOptionC(e.target.value)} />
-            <input className="w-full rounded border p-3" placeholder="Option D" value={optionD} onChange={(e) => setOptionD(e.target.value)} />
+            {isMCQ ? (
+              <div className="grid gap-4">
+                <input
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="Option A"
+                  value={optionA}
+                  onChange={(e) => setOptionA(e.target.value)}
+                />
+                <input
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="Option B"
+                  value={optionB}
+                  onChange={(e) => setOptionB(e.target.value)}
+                />
+                <input
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="Option C"
+                  value={optionC}
+                  onChange={(e) => setOptionC(e.target.value)}
+                />
+                <input
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="Option D"
+                  value={optionD}
+                  onChange={(e) => setOptionD(e.target.value)}
+                />
 
-            <select className="w-full rounded border p-3" value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)}>
-              <option value="A">Correct Answer: A</option>
-              <option value="B">Correct Answer: B</option>
-              <option value="C">Correct Answer: C</option>
-              <option value="D">Correct Answer: D</option>
-            </select>
-          </>
-        ) : (
-          <input
-            className="w-full rounded border p-3"
-            placeholder="Correct answer / expected answer"
-            value={correctAnswer}
-            onChange={(e) => setCorrectAnswer(e.target.value)}
-          />
-        )}
+                <div>
+                  <label
+                    htmlFor="correctAnswer"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Correct answer
+                  </label>
+                  <select
+                    id="correctAnswer"
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                    value={correctAnswer}
+                    onChange={(e) => setCorrectAnswer(e.target.value)}
+                  >
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label
+                  htmlFor="expectedAnswer"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Expected answer
+                </label>
+                <input
+                  id="expectedAnswer"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="Enter the expected answer"
+                  value={correctAnswer}
+                  onChange={(e) => setCorrectAnswer(e.target.value)}
+                />
+              </div>
+            )}
 
-        <select className="w-full rounded border p-3" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-          <option value="EASY">Easy</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HARD">Hard</option>
-        </select>
+            <div>
+              <label
+                htmlFor="timeThreshold"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
+                Time threshold (seconds)
+              </label>
+              <input
+                id="timeThreshold"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                type="number"
+                min={10}
+                max={300}
+                value={timeThresholdSeconds}
+                onChange={(e) => setTimeThresholdSeconds(Number(e.target.value))}
+              />
+            </div>
 
-        <input
-          className="w-full rounded border p-3"
-          type="number"
-          min={10}
-          max={300}
-          value={timeThresholdSeconds}
-          onChange={(e) => setTimeThresholdSeconds(Number(e.target.value))}
-        />
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
-        {error && <p className="text-red-600">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-70"
+            >
+              {loading ? "Saving..." : "Save Question"}
+            </button>
+          </form>
+        </div>
 
-        <button type="submit" disabled={loading} className="rounded bg-black px-4 py-2 text-white">
-          {loading ? "Saving..." : "Save Question"}
-        </button>
-      </form>
-    </main>
+        <div className="rounded-3xl border border-gray-200 bg-black p-8 text-white shadow-xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-300">
+            Question Guidelines
+          </p>
+
+          <div className="mt-6 space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="font-semibold">Write clearly</p>
+              <p className="mt-2 text-sm leading-6 text-gray-300">
+                Keep questions concise and aligned with the target competency.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="font-semibold">Match the type</p>
+              <p className="mt-2 text-sm leading-6 text-gray-300">
+                Multiple choice needs options, while identification and essay use
+                direct answers.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="font-semibold">Set reasonable timing</p>
+              <p className="mt-2 text-sm leading-6 text-gray-300">
+                Time thresholds support adaptive rules and response analysis.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </InstructorShell>
   );
 }

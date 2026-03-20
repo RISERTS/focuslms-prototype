@@ -1,0 +1,63 @@
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/get-session";
+import InstructorShell from "@/components/instructor/InstructorShell";
+import EditQuizSettingsForm from "./quiz-settings-form";
+
+export default async function EditQuizSettingsPage({
+  params,
+}: {
+  params: Promise<{ courseId: string; quizId: string }>;
+}) {
+  const session = await getSession();
+
+  if (!session || session.role !== "INSTRUCTOR") {
+    redirect("/login");
+  }
+
+  const { courseId, quizId } = await params;
+
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: {
+      course: true,
+    },
+  });
+
+  if (
+    !quiz ||
+    quiz.courseId !== courseId ||
+    quiz.course.instructorId !== session.userId
+  ) {
+    redirect("/login");
+  }
+
+  return (
+    <InstructorShell
+      title="Edit Quiz Settings"
+      description="Update the quiz title, type, attempts, adaptive mode, and other settings."
+      actions={[
+        {
+          label: "Back to Quiz",
+          href: `/instructor/courses/${courseId}/quizzes/${quizId}`,
+          variant: "secondary",
+        },
+      ]}
+    >
+      <EditQuizSettingsForm
+        courseId={courseId}
+        quizId={quizId}
+        initialData={{
+          title: quiz.title,
+          description: quiz.description ?? "",
+          quizType: quiz.quizType,
+          maxAttempts: quiz.maxAttempts,
+          questionsPerAttempt: quiz.questionsPerAttempt,
+          shuffleOptions: quiz.shuffleOptions,
+          avoidRepeatedQuestions: quiz.avoidRepeatedQuestions,
+          adaptiveMode: quiz.adaptiveMode,
+        }}
+      />
+    </InstructorShell>
+  );
+}
