@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import InstructorShell from "@/components/instructor/InstructorShell";
 
 type ApiErrorResponse = {
@@ -10,11 +10,27 @@ type ApiErrorResponse = {
 };
 
 type CloseMode = "none" | "specific" | "duration";
+type TermCategory = "PRELIMS" | "MIDTERMS" | "FINALS";
 
 function toIsoOrNull(value: string) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function getNowLocalDateTime() {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  const offset = now.getTimezoneOffset();
+  const local = new Date(now.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+}
+
+function formatLocalDateTime(value: string) {
+  if (!value) return "Not set";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Invalid date";
+  return date.toLocaleString();
 }
 
 export default function CreateQuizPage() {
@@ -24,6 +40,7 @@ export default function CreateQuizPage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [term, setTerm] = useState<TermCategory>("PRELIMS");
   const [maxAttempts, setMaxAttempts] = useState(3);
   const [questionsPerAttempt, setQuestionsPerAttempt] = useState<number | "">("");
   const [shuffleOptions, setShuffleOptions] = useState(true);
@@ -40,14 +57,34 @@ export default function CreateQuizPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const nowLocal = getNowLocalDateTime();
+
+  const computedClosePreview = useMemo(() => {
+    if (!opensAtLocal) return "";
+
+    if (closeMode === "specific") {
+      return closesAtLocal;
+    }
+
+    if (closeMode === "duration" && availabilityDurationMinutes !== "") {
+      const openDate = new Date(opensAtLocal);
+      if (Number.isNaN(openDate.getTime())) return "";
+      const closeDate = new Date(
+        openDate.getTime() + Number(availabilityDurationMinutes) * 60 * 1000
+      );
+      const offset = closeDate.getTimezoneOffset();
+      const localDate = new Date(closeDate.getTime() - offset * 60 * 1000);
+      return localDate.toISOString().slice(0, 16);
+    }
+
+    return "";
+  }, [opensAtLocal, closeMode, closesAtLocal, availabilityDurationMinutes]);
+
   function buildSchedule() {
     const opensAt = toIsoOrNull(opensAtLocal);
 
     if (!opensAtLocal) {
-      return {
-        opensAt: null as string | null,
-        closesAt: null as string | null,
-      };
+      return { opensAt: null as string | null, closesAt: null as string | null };
     }
 
     if (closeMode === "specific") {
@@ -59,30 +96,40 @@ export default function CreateQuizPage() {
 
     if (closeMode === "duration") {
       if (!availabilityDurationMinutes || !opensAt) {
-        return {
-          opensAt,
-          closesAt: null as string | null,
-        };
+        return { opensAt, closesAt: null as string | null };
       }
 
-      const closeDate = new Date(new Date(opensAt).getTime() + Number(availabilityDurationMinutes) * 60 * 1000);
+      const closeDate = new Date(
+        new Date(opensAt).getTime() + Number(availabilityDurationMinutes) * 60 * 1000
+      );
 
-      return {
-        opensAt,
-        closesAt: closeDate.toISOString(),
-      };
+      return { opensAt, closesAt: closeDate.toISOString() };
     }
 
-    return {
-      opensAt,
-      closesAt: null as string | null,
-    };
+    return { opensAt, closesAt: null as string | null };
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (opensAtLocal && new Date(opensAtLocal) < new Date()) {
+      setLoading(false);
+      setError("Open date/time cannot be in the past.");
+      return;
+    }
+
+    if (
+      closeMode === "specific" &&
+      opensAtLocal &&
+      closesAtLocal &&
+      new Date(closesAtLocal) <= new Date(opensAtLocal)
+    ) {
+      setLoading(false);
+      setError("Close date/time must be later than the open date/time.");
+      return;
+    }
 
     const schedule = buildSchedule();
 
@@ -96,6 +143,7 @@ export default function CreateQuizPage() {
           courseId,
           title,
           description,
+          term,
           maxAttempts,
           questionsPerAttempt:
             questionsPerAttempt === "" ? null : Number(questionsPerAttempt),
@@ -106,9 +154,7 @@ export default function CreateQuizPage() {
           opensAt: schedule.opensAt,
           closesAt: schedule.closesAt,
           attemptTimeLimitMinutes:
-            attemptTimeLimitMinutes === ""
-              ? null
-              : Number(attemptTimeLimitMinutes),
+            attemptTimeLimitMinutes === "" ? null : Number(attemptTimeLimitMinutes),
         }),
       });
 
@@ -133,7 +179,7 @@ export default function CreateQuizPage() {
   return (
     <InstructorShell
       title="Create Quiz"
-      description="Configure attempts, schedule, availability window, and attempt time limit."
+      description="Configure term, attempts, schedule, availability window, and attempt time limit."
       actions={[
         {
           label: "Back to Quizzes",
@@ -150,7 +196,7 @@ export default function CreateQuizPage() {
                 Quiz title
               </label>
               <input
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
@@ -162,13 +208,28 @@ export default function CreateQuizPage() {
               </label>
               <textarea
                 rows={5}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-5 md:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Term
+                </label>
+                <select
+                  value={term}
+                  onChange={(e) => setTerm(e.target.value as TermCategory)}
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                >
+                  <option value="PRELIMS">Prelims</option>
+                  <option value="MIDTERMS">Midterms</option>
+                  <option value="FINALS">Finals</option>
+                </select>
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Quiz type
@@ -193,7 +254,7 @@ export default function CreateQuizPage() {
                 <input
                   type="number"
                   min={1}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                   value={maxAttempts}
                   onChange={(e) => setMaxAttempts(Number(e.target.value))}
                 />
@@ -208,7 +269,7 @@ export default function CreateQuizPage() {
                 <input
                   type="number"
                   min={1}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                   value={questionsPerAttempt}
                   onChange={(e) =>
                     setQuestionsPerAttempt(
@@ -225,14 +286,13 @@ export default function CreateQuizPage() {
                 <input
                   type="number"
                   min={1}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                   value={attemptTimeLimitMinutes}
                   onChange={(e) =>
                     setAttemptTimeLimitMinutes(
                       e.target.value === "" ? "" : Number(e.target.value)
                     )
                   }
-                  placeholder="Leave blank for no per-attempt limit"
                 />
               </div>
             </div>
@@ -249,9 +309,22 @@ export default function CreateQuizPage() {
                   </label>
                   <input
                     type="datetime-local"
-                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                    min={nowLocal}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                     value={opensAtLocal}
-                    onChange={(e) => setOpensAtLocal(e.target.value)}
+                    onChange={(e) => {
+                      const nextOpen = e.target.value;
+                      setOpensAtLocal(nextOpen);
+
+                      if (
+                        closeMode === "specific" &&
+                        closesAtLocal &&
+                        nextOpen &&
+                        new Date(closesAtLocal) <= new Date(nextOpen)
+                      ) {
+                        setClosesAtLocal("");
+                      }
+                    }}
                   />
                 </div>
 
@@ -277,7 +350,8 @@ export default function CreateQuizPage() {
                     </label>
                     <input
                       type="datetime-local"
-                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                      min={opensAtLocal || nowLocal}
+                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                       value={closesAtLocal}
                       onChange={(e) => setClosesAtLocal(e.target.value)}
                     />
@@ -292,7 +366,7 @@ export default function CreateQuizPage() {
                     <input
                       type="number"
                       min={1}
-                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                       value={availabilityDurationMinutes}
                       onChange={(e) =>
                         setAvailabilityDurationMinutes(
@@ -302,6 +376,20 @@ export default function CreateQuizPage() {
                     />
                   </div>
                 )}
+
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
+                  <p className="font-semibold text-gray-900">Schedule Preview</p>
+                  <p className="mt-2">
+                    <span className="font-medium">Opens:</span>{" "}
+                    {formatLocalDateTime(opensAtLocal)}
+                  </p>
+                  <p className="mt-1">
+                    <span className="font-medium">Closes:</span>{" "}
+                    {computedClosePreview
+                      ? formatLocalDateTime(computedClosePreview)
+                      : "No close schedule"}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -358,28 +446,21 @@ export default function CreateQuizPage() {
 
         <div className="rounded-3xl border border-gray-200 bg-black p-8 text-white shadow-xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-300">
-            Schedule Notes
+            Notes
           </p>
 
           <div className="mt-6 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="font-semibold">Open and close</p>
+              <p className="font-semibold">Term Category</p>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                You can set both open and close times, or compute close time from an opening duration.
+                Assign the quiz to Prelims, Midterms, or Finals for term-based grade computation.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="font-semibold">Per-attempt timer</p>
+              <p className="font-semibold">Open date restriction</p>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                This is how long a student has to finish one attempt once they start.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="font-semibold">Security mode</p>
-              <p className="mt-2 text-sm leading-6 text-gray-300">
-                Student quiz pages will require fullscreen and monitor fullscreen exits and page hiding.
+                The quiz cannot be set to open at a date or time that has already passed.
               </p>
             </div>
           </div>

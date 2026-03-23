@@ -4,13 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type OriginalOptionKey = "A" | "B" | "C" | "D";
-
 type QuestionType =
   | "MULTIPLE_CHOICE"
   | "IDENTIFICATION"
   | "ESSAY"
   | "COMPUTATIONAL";
-
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
 type AdaptiveQuestion = {
@@ -63,6 +61,8 @@ export default function AdaptiveQuizClient({
 }: {
   quizId: string;
   courseId: string;
+  title?: string;
+  description?: string | null;
 }) {
   const router = useRouter();
   const [quiz, setQuiz] = useState<QuizMeta | null>(null);
@@ -237,21 +237,27 @@ export default function AdaptiveQuizClient({
 
     if (currentQuestion.questionType === "MULTIPLE_CHOICE") {
       return (
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-3">
           {renderedChoices.map((choice, index) => {
             const label = ["A", "B", "C", "D"][index];
 
             return (
-              <label key={choice.originalKey} className="block">
+              <label
+                key={choice.originalKey}
+                className="flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 transition hover:bg-gray-50"
+              >
                 <input
                   type="radio"
                   name={currentQuestion.id}
                   value={choice.originalKey}
                   checked={currentAnswer === choice.originalKey}
                   onChange={() => setCurrentAnswer(choice.originalKey)}
-                  className="mr-2"
+                  className="mt-1"
                 />
-                {label}. {choice.text}
+                <span className="text-sm text-gray-700">
+                  <span className="font-semibold text-gray-900">{label}.</span>{" "}
+                  {choice.text}
+                </span>
               </label>
             );
           })}
@@ -261,7 +267,7 @@ export default function AdaptiveQuizClient({
 
     return (
       <input
-        className="mt-4 w-full rounded border p-3"
+        className="mt-4 w-full rounded-2xl border border-gray-300 bg-white p-4 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
         type="text"
         placeholder={
           currentQuestion.questionType === "COMPUTATIONAL"
@@ -276,59 +282,82 @@ export default function AdaptiveQuizClient({
 
   if (loading) {
     return (
-      <main className="min-h-screen p-8">
-        <p>Loading adaptive quiz...</p>
+      <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 p-8">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p>Loading adaptive quiz...</p>
+        </div>
       </main>
     );
   }
 
   if (error && !currentQuestion && !quiz) {
     return (
-      <main className="min-h-screen p-8">
-        <p className="text-red-600">{error}</p>
+      <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 p-8">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-red-600">{error}</p>
+        </div>
       </main>
     );
   }
 
   if (!quiz || !currentQuestion) {
     return (
-      <main className="min-h-screen p-8">
-        <p>No adaptive question available.</p>
+      <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 p-8">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p>No adaptive question available.</p>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold">{quiz.title}</h1>
-      <p className="mt-2 text-gray-600">{quiz.description || "No description"}</p>
+    <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 p-8 text-gray-900">
+      <div className="mx-auto max-w-3xl">
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
+            Adaptive Quiz
+          </p>
+          <h1 className="mt-4 text-3xl font-bold">{quiz.title}</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            {quiz.description || "No description"}
+          </p>
 
-      <p className="mt-4 text-sm text-gray-500">
-        Question {savedAnswers.length + 1} of {quiz.maxItems}
-      </p>
+          <div className="mt-6 flex flex-wrap gap-3 text-sm">
+            <span className="rounded-full border border-gray-300 px-4 py-2">
+              Question {savedAnswers.length + 1} of {quiz.maxItems}
+            </span>
+            <span className="rounded-full border border-gray-300 px-4 py-2">
+              Difficulty: {currentQuestion.difficulty}
+            </span>
+            <span className="rounded-full border border-gray-300 px-4 py-2">
+              Type: {currentQuestion.questionType}
+            </span>
+          </div>
 
-      <div className="mt-6 rounded border p-4">
-        <p className="font-semibold">{currentQuestion.questionText}</p>
-        <p className="mt-2 text-sm text-gray-500">
-          Difficulty: {currentQuestion.difficulty} | Type: {currentQuestion.questionType}
-        </p>
+          <div className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-6">
+            <p className="font-semibold">{currentQuestion.questionText}</p>
+            {renderQuestionInput()}
+          </div>
 
-        {renderQuestionInput()}
+          {error && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleNext}
+            disabled={submitting}
+            className="mt-6 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-70"
+          >
+            {submitting
+              ? "Processing..."
+              : savedAnswers.length + 1 >= quiz.maxItems
+              ? "Finish Adaptive Quiz"
+              : "Next Question"}
+          </button>
+        </div>
       </div>
-
-      {error && <p className="mt-4 text-red-600">{error}</p>}
-
-      <button
-        onClick={handleNext}
-        disabled={submitting}
-        className="mt-6 rounded bg-black px-4 py-2 text-white"
-      >
-        {submitting
-          ? "Processing..."
-          : savedAnswers.length + 1 >= quiz.maxItems
-          ? "Finish Adaptive Quiz"
-          : "Next Question"}
-      </button>
     </main>
   );
 }

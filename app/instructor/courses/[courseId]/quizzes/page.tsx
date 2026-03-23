@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import InstructorShell from "@/components/instructor/InstructorShell";
 
+function formatSchedule(date: Date | null) {
+  return date ? date.toLocaleString() : null;
+}
+
 export default async function InstructorQuizListPage({
   params,
 }: {
@@ -111,6 +115,12 @@ export default async function InstructorQuizListPage({
                 </span>
                 <span className="rounded-full border border-gray-300 px-3 py-1">
                   Adaptive: {quiz.adaptiveMode ? "Yes" : "No"}
+                </span>
+                <span className="rounded-full border border-gray-300 px-3 py-1">
+                  Opens: {formatSchedule(quiz.opensAt) || "Immediately"}
+                </span>
+                <span className="rounded-full border border-gray-300 px-3 py-1">
+                  Closes: {formatSchedule(quiz.closesAt) || "No close"}
                 </span>
               </div>
             </Link>

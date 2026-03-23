@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/get-session";
 import { prisma } from "@/lib/prisma";
 import LogOnMount from "@/components/LogOnMount";
-import ConfirmLogoutButton from "@/components/ConfirmLogoutButton";
+import StudentShell from "@/components/student/StudentShell";
 
 export default async function StudentDashboardPage() {
   const session = await getSession();
@@ -32,55 +32,60 @@ export default async function StudentDashboardPage() {
     ]);
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 text-gray-900">
+    <>
       <LogOnMount actionType="VIEW_DASHBOARD" />
-
-      <section className="border-b border-gray-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">
-              FocusLMS
-            </p>
-            <h1 className="mt-2 text-2xl font-bold">Student Dashboard</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Welcome back, {session.email}
-            </p>
-          </div>
-
-          <ConfirmLogoutButton />
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-6 py-8">
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <StudentShell
+        title="Student Dashboard"
+        description="Open your enrolled courses, browse available classes, access learning materials, and continue your quizzes from one focused workspace."
+        sessionEmail={session.email}
+        actions={[
+          {
+            label: "My Enrolled Courses",
+            href: "/student/enrolled",
+            variant: "primary",
+          },
+          {
+            label: "Browse Courses",
+            href: "/student/courses",
+            variant: "secondary",
+          },
+        ]}
+      >
+        <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
               Learning Space
             </p>
 
             <h2 className="mt-4 max-w-3xl text-3xl font-bold leading-tight">
-              Stay focused, access your courses, and continue your assessments
+              Stay focused, continue your lessons, and complete your assessments
             </h2>
 
             <p className="mt-4 max-w-2xl text-sm leading-7 text-gray-600">
-              Use your dashboard to open enrolled courses, browse available
-              subjects, access materials, and take quizzes in a clean and
-              distraction-minimized interface.
+              Use your student workspace to access course materials, take quizzes,
+              and view learning activities in a clean and distraction-minimized
+              environment.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
               <Link
                 href="/student/enrolled"
-                className="rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
+                className="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition hover:bg-white"
               >
-                My Enrolled Courses
+                <p className="text-lg font-semibold">Continue Learning</p>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
+                  Open the courses you already joined and continue your progress.
+                </p>
               </Link>
 
               <Link
                 href="/student/courses"
-                className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                className="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition hover:bg-white"
               >
-                Browse Courses
+                <p className="text-lg font-semibold">Find Courses</p>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
+                  Browse the full course list and join new classes.
+                </p>
               </Link>
             </div>
           </div>
@@ -114,9 +119,9 @@ export default async function StudentDashboardPage() {
             href="/student/enrolled"
             className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <p className="text-lg font-semibold">Enrolled Courses</p>
+            <p className="text-lg font-semibold">My Courses</p>
             <p className="mt-2 text-sm leading-6 text-gray-600">
-              Open the courses you already joined and continue your lessons.
+              Open your enrolled classes and continue learning.
             </p>
           </Link>
 
@@ -124,21 +129,21 @@ export default async function StudentDashboardPage() {
             href="/student/courses"
             className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <p className="text-lg font-semibold">Available Courses</p>
+            <p className="text-lg font-semibold">Browse Courses</p>
             <p className="mt-2 text-sm leading-6 text-gray-600">
-              Explore the list of published courses and enroll in new subjects.
+              Explore published subjects that are available for enrollment.
             </p>
           </Link>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <p className="text-lg font-semibold">Adaptive Learning</p>
             <p className="mt-2 text-sm leading-6 text-gray-600">
-              Some quizzes may use rule-based adaptive assessment to adjust
-              question difficulty based on your performance and response time.
+              Some quizzes may adapt their difficulty based on your performance
+              and response time.
             </p>
           </div>
         </div>
-      </section>
-    </main>
+      </StudentShell>
+    </>
   );
 }

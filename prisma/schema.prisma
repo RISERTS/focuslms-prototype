@@ -47,6 +47,19 @@ enum QuestionType {
   COMPUTATIONAL
 }
 
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REMOVED
+}
+
+enum TermCategory {
+  PRELIMS
+  MIDTERMS
+  FINALS
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -78,32 +91,14 @@ model Course {
   activityLogs ActivityLog[]
 }
 
-model Quiz {
-  id                      String    @id @default(cuid())
-  courseId                String
-  title                   String
-  description             String?
-  createdAt               DateTime  @default(now())
-  maxAttempts             Int       @default(3)
-  questionsPerAttempt     Int?
-  shuffleOptions          Boolean   @default(true)
-  avoidRepeatedQuestions  Boolean   @default(true)
-  quizType                QuizType  @default(MULTIPLE_CHOICE)
-  adaptiveMode            Boolean   @default(false)
-  opensAt                 DateTime?
-  closesAt                DateTime?
-  attemptTimeLimitMinutes Int?
-
-  course    Course        @relation(fields: [courseId], references: [id])
-  questions Question[]
-  attempts  QuizAttempt[]
-}
-
 model Enrollment {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   userId    String
   courseId  String
-  createdAt DateTime @default(now())
+  status    EnrollmentStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  decidedAt DateTime?
 
   user   User   @relation(fields: [userId], references: [id])
   course Course @relation(fields: [courseId], references: [id])
@@ -112,15 +107,38 @@ model Enrollment {
 }
 
 model Material {
-  id         String   @id @default(cuid())
+  id         String       @id @default(cuid())
   courseId   String
   title      String
   fileKey    String
   fileUrl    String
   fileType   String
-  uploadedAt DateTime @default(now())
+  term       TermCategory @default(PRELIMS)
+  uploadedAt DateTime     @default(now())
 
   course Course @relation(fields: [courseId], references: [id])
+}
+
+model Quiz {
+  id                      String       @id @default(cuid())
+  courseId                String
+  title                   String
+  description             String?
+  createdAt               DateTime     @default(now())
+  maxAttempts             Int          @default(3)
+  questionsPerAttempt     Int?
+  shuffleOptions          Boolean      @default(true)
+  avoidRepeatedQuestions  Boolean      @default(true)
+  quizType                QuizType     @default(MULTIPLE_CHOICE)
+  adaptiveMode            Boolean      @default(false)
+  term                    TermCategory @default(PRELIMS)
+  opensAt                 DateTime?
+  closesAt                DateTime?
+  attemptTimeLimitMinutes Int?
+
+  course    Course        @relation(fields: [courseId], references: [id])
+  questions Question[]
+  attempts  QuizAttempt[]
 }
 
 model Question {

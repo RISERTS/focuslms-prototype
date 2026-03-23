@@ -4,6 +4,7 @@ import { getSession } from "@/lib/get-session";
 import { selectQuestionsForAttempt } from "@/lib/quiz-selection";
 import AdaptiveQuizClient from "./adaptive-quiz-client";
 import TakeQuizClient from "./take-quiz-client";
+import StudentShell from "@/components/student/StudentShell";
 
 export default async function StudentTakeQuizPage({
   params,
@@ -25,9 +26,12 @@ export default async function StudentTakeQuizPage({
         courseId,
       },
     },
+    select: {
+      status: true,
+    },
   });
 
-  if (!enrollment) {
+  if (!enrollment || enrollment.status !== "APPROVED") {
     redirect("/student/courses");
   }
 
@@ -55,40 +59,71 @@ export default async function StudentTakeQuizPage({
 
   if (quiz.opensAt && now < quiz.opensAt) {
     return (
-      <main className="min-h-screen p-8">
-        <h1 className="text-3xl font-bold">{quiz.title}</h1>
-        <p className="mt-4 text-gray-600">
-          This quiz is not yet open.
-        </p>
-        <p className="mt-2 text-sm text-gray-500">
-          Opens on: {quiz.opensAt.toLocaleString()}
-        </p>
-      </main>
+      <StudentShell
+        title={quiz.title}
+        description={quiz.description || "No description"}
+        actions={[
+          {
+            label: "Back to Course",
+            href: `/student/courses/${courseId}`,
+            variant: "secondary",
+          },
+        ]}
+      >
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-lg font-semibold">This quiz is not yet open.</p>
+          <p className="mt-3 text-sm text-gray-600">
+            Opens on: {quiz.opensAt.toLocaleString()}
+          </p>
+        </div>
+      </StudentShell>
     );
   }
 
   if (quiz.closesAt && now > quiz.closesAt) {
     return (
-      <main className="min-h-screen p-8">
-        <h1 className="text-3xl font-bold">{quiz.title}</h1>
-        <p className="mt-4 text-red-600">
-          This quiz is already closed.
-        </p>
-        <p className="mt-2 text-sm text-gray-500">
-          Closed on: {quiz.closesAt.toLocaleString()}
-        </p>
-      </main>
+      <StudentShell
+        title={quiz.title}
+        description={quiz.description || "No description"}
+        actions={[
+          {
+            label: "Back to Course",
+            href: `/student/courses/${courseId}`,
+            variant: "secondary",
+          },
+        ]}
+      >
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-lg font-semibold text-red-600">
+            This quiz is already closed.
+          </p>
+          <p className="mt-3 text-sm text-gray-600">
+            Closed on: {quiz.closesAt.toLocaleString()}
+          </p>
+        </div>
+      </StudentShell>
     );
   }
 
   if (quiz.attempts.length >= quiz.maxAttempts) {
     return (
-      <main className="min-h-screen p-8">
-        <h1 className="text-3xl font-bold">{quiz.title}</h1>
-        <p className="mt-4 text-red-600">
-          You have already used all allowed attempts for this quiz.
-        </p>
-      </main>
+      <StudentShell
+        title={quiz.title}
+        description={quiz.description || "No description"}
+        actions={[
+          {
+            label: "Back to Course",
+            href: `/student/courses/${courseId}`,
+            variant: "secondary",
+          },
+        ]}
+      >
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-lg font-semibold text-red-600">
+            You have already used all allowed attempts for this quiz.
+          </p>
+        </div>
+      </StudentShell>
     );
   }
 

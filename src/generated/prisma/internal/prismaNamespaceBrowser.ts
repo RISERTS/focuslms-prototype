@@ -53,9 +53,9 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Course: 'Course',
-  Quiz: 'Quiz',
   Enrollment: 'Enrollment',
   Material: 'Material',
+  Quiz: 'Quiz',
   Question: 'Question',
   QuizAttempt: 'QuizAttempt',
   ActivityLog: 'ActivityLog',
@@ -104,31 +104,14 @@ export const CourseScalarFieldEnum = {
 export type CourseScalarFieldEnum = (typeof CourseScalarFieldEnum)[keyof typeof CourseScalarFieldEnum]
 
 
-export const QuizScalarFieldEnum = {
-  id: 'id',
-  courseId: 'courseId',
-  title: 'title',
-  description: 'description',
-  createdAt: 'createdAt',
-  maxAttempts: 'maxAttempts',
-  questionsPerAttempt: 'questionsPerAttempt',
-  shuffleOptions: 'shuffleOptions',
-  avoidRepeatedQuestions: 'avoidRepeatedQuestions',
-  quizType: 'quizType',
-  adaptiveMode: 'adaptiveMode',
-  opensAt: 'opensAt',
-  closesAt: 'closesAt',
-  attemptTimeLimitMinutes: 'attemptTimeLimitMinutes'
-} as const
-
-export type QuizScalarFieldEnum = (typeof QuizScalarFieldEnum)[keyof typeof QuizScalarFieldEnum]
-
-
 export const EnrollmentScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   courseId: 'courseId',
-  createdAt: 'createdAt'
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  decidedAt: 'decidedAt'
 } as const
 
 export type EnrollmentScalarFieldEnum = (typeof EnrollmentScalarFieldEnum)[keyof typeof EnrollmentScalarFieldEnum]
@@ -141,10 +124,32 @@ export const MaterialScalarFieldEnum = {
   fileKey: 'fileKey',
   fileUrl: 'fileUrl',
   fileType: 'fileType',
+  term: 'term',
   uploadedAt: 'uploadedAt'
 } as const
 
 export type MaterialScalarFieldEnum = (typeof MaterialScalarFieldEnum)[keyof typeof MaterialScalarFieldEnum]
+
+
+export const QuizScalarFieldEnum = {
+  id: 'id',
+  courseId: 'courseId',
+  title: 'title',
+  description: 'description',
+  createdAt: 'createdAt',
+  maxAttempts: 'maxAttempts',
+  questionsPerAttempt: 'questionsPerAttempt',
+  shuffleOptions: 'shuffleOptions',
+  avoidRepeatedQuestions: 'avoidRepeatedQuestions',
+  quizType: 'quizType',
+  adaptiveMode: 'adaptiveMode',
+  term: 'term',
+  opensAt: 'opensAt',
+  closesAt: 'closesAt',
+  attemptTimeLimitMinutes: 'attemptTimeLimitMinutes'
+} as const
+
+export type QuizScalarFieldEnum = (typeof QuizScalarFieldEnum)[keyof typeof QuizScalarFieldEnum]
 
 
 export const QuestionScalarFieldEnum = {

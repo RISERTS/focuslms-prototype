@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type OriginalOptionKey = "A" | "B" | "C" | "D";
 type QuestionType =
@@ -103,6 +103,17 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
     });
   }, [quiz]);
 
+  const answersRef = useRef<Record<string, AnswerValue>>({});
+  const renderedQuestionsRef = useRef(renderedQuestions);
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    renderedQuestionsRef.current = renderedQuestions;
+  }, [renderedQuestions]);
+
   function choose(questionId: string, value: string) {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   }
@@ -128,6 +139,8 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
     try {
       await document.documentElement.requestFullscreen();
       startTimeRef.current = Date.now();
+      submitStartedRef.current = false;
+      setViolations(0);
       setStarted(true);
 
       await fetch("/api/activity-log", {
@@ -147,74 +160,82 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
     }
   }
 
-  async function submitQuiz(autoFillMissing: boolean) {
-    if (submitStartedRef.current) return;
-    submitStartedRef.current = true;
+  const submitQuiz = useCallback(
+    async (autoFillMissing: boolean) => {
+      if (submitStartedRef.current) return;
+      submitStartedRef.current = true;
 
-    setLoading(true);
-    setError("");
+      setLoading(true);
+      setError("");
 
-    const startedAt = startTimeRef.current ?? Date.now();
-    const elapsedSeconds = Math.max(
-      1,
-      Math.floor((Date.now() - startedAt) / 1000)
-    );
+      const currentAnswers = answersRef.current;
+      const currentQuestions = renderedQuestionsRef.current;
 
-    const avgPerQuestion = Math.max(
-      1,
-      Math.floor(elapsedSeconds / renderedQuestions.length)
-    );
+      const startedAt = startTimeRef.current ?? Date.now();
+      const elapsedSeconds = Math.max(
+        1,
+        Math.floor((Date.now() - startedAt) / 1000)
+      );
 
-    const payloadAnswers = renderedQuestions.map((q) => ({
-      questionId: q.id,
-      selectedAnswer: autoFillMissing ? answers[q.id] ?? "" : answers[q.id],
-      responseTimeSeconds: avgPerQuestion,
-    }));
+      const avgPerQuestion = Math.max(
+        1,
+        Math.floor(elapsedSeconds / Math.max(1, currentQuestions.length))
+      );
 
-    try {
-      const res = await fetch("/api/quiz-submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          quizId: quiz.id,
-          totalElapsedSeconds: elapsedSeconds,
-          answers: payloadAnswers,
-        }),
-      });
+      const payloadAnswers = currentQuestions.map((q) => ({
+        questionId: q.id,
+        selectedAnswer: autoFillMissing
+          ? currentAnswers[q.id] ?? ""
+          : currentAnswers[q.id],
+        responseTimeSeconds: avgPerQuestion,
+      }));
 
-      const text = await res.text();
-      const data = text
-        ? (JSON.parse(text) as { error?: string; score?: number })
-        : {};
+      try {
+        const res = await fetch("/api/quiz-submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quizId: quiz.id,
+            totalElapsedSeconds: elapsedSeconds,
+            answers: payloadAnswers,
+          }),
+        });
 
-      if (!res.ok) {
+        const text = await res.text();
+        const data = text
+          ? (JSON.parse(text) as { error?: string; score?: number })
+          : {};
+
+        if (!res.ok) {
+          setLoading(false);
+          submitStartedRef.current = false;
+          setError(data.error || "Failed to submit quiz.");
+          return;
+        }
+
+        if (document.fullscreenElement) {
+          await document.exitFullscreen().catch(() => undefined);
+        }
+
+        setLoading(false);
+        alert(
+          typeof data.score === "number"
+            ? `Quiz submitted. Score: ${data.score.toFixed(2)}`
+            : "Quiz submitted successfully."
+        );
+        router.push(`/student/courses/${courseId}`);
+        router.refresh();
+      } catch (err) {
+        console.error("Submit quiz error:", err);
         setLoading(false);
         submitStartedRef.current = false;
-        setError(data.error || "Failed to submit quiz.");
-        return;
+        setError("Something went wrong while submitting the quiz.");
       }
-
-      if (document.fullscreenElement) {
-        await document.exitFullscreen().catch(() => undefined);
-      }
-
-      setLoading(false);
-      alert(
-        typeof data.score === "number"
-          ? `Quiz submitted. Score: ${data.score.toFixed(2)}`
-          : "Quiz submitted successfully."
-      );
-      router.push(`/student/courses/${courseId}`);
-      router.refresh();
-    } catch (err) {
-      console.error("Submit quiz error:", err);
-      setLoading(false);
-      submitStartedRef.current = false;
-      setError("Something went wrong while submitting the quiz.");
-    }
-  }
+    },
+    [courseId, quiz.id, router]
+  );
 
   async function handleSubmit() {
     setError("");
@@ -269,9 +290,16 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
 
   useEffect(() => {
     if (!started || timeLeftSeconds === null) return;
+    if (submitStartedRef.current) return;
+
     if (timeLeftSeconds <= 0) {
-      void submitQuiz(true);
-      return;
+      const timeout = window.setTimeout(() => {
+        if (!submitStartedRef.current) {
+          void submitQuiz(true);
+        }
+      }, 0);
+
+      return () => window.clearTimeout(timeout);
     }
 
     const timer = window.setInterval(() => {
@@ -279,26 +307,34 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [started, timeLeftSeconds]);
+  }, [started, submitQuiz, timeLeftSeconds]);
 
   useEffect(() => {
     if (!started) return;
+    if (submitStartedRef.current) return;
+
     if (violations >= 3) {
-      void submitQuiz(true);
+      const timeout = window.setTimeout(() => {
+        if (!submitStartedRef.current) {
+          void submitQuiz(true);
+        }
+      }, 0);
+
+      return () => window.clearTimeout(timeout);
     }
-  }, [violations, started]);
+  }, [violations, started, submitQuiz]);
 
   function renderQuestionInput(question: (typeof renderedQuestions)[number]) {
     if (question.questionType === "MULTIPLE_CHOICE") {
       return (
-        <div className="mt-3 space-y-2">
+        <div className="mt-4 space-y-3">
           {question.renderedChoices.map((choice, choiceIndex) => {
             const visualLabel = ["A", "B", "C", "D"][choiceIndex];
 
             return (
               <label
                 key={`${question.id}-${choice.originalKey}`}
-                className="block"
+                className="flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 transition hover:bg-gray-50"
               >
                 <input
                   type="radio"
@@ -306,9 +342,14 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
                   value={choice.originalKey}
                   checked={answers[question.id] === choice.originalKey}
                   onChange={() => choose(question.id, choice.originalKey)}
-                  className="mr-2"
+                  className="mt-1"
                 />
-                {visualLabel}. {choice.text}
+                <span className="text-sm text-gray-700">
+                  <span className="font-semibold text-gray-900">
+                    {visualLabel}.
+                  </span>{" "}
+                  {choice.text}
+                </span>
               </label>
             );
           })}
@@ -319,7 +360,7 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
     if (question.questionType === "ESSAY") {
       return (
         <textarea
-          className="mt-3 w-full rounded border p-3"
+          className="mt-4 w-full rounded-2xl border border-gray-300 bg-white p-4 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
           rows={6}
           placeholder="Write your answer here..."
           value={answers[question.id] ?? ""}
@@ -330,7 +371,7 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
 
     return (
       <input
-        className="mt-3 w-full rounded border p-3"
+        className="mt-4 w-full rounded-2xl border border-gray-300 bg-white p-4 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
         type="text"
         placeholder={
           question.questionType === "COMPUTATIONAL"
@@ -345,13 +386,18 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
 
   if (!started) {
     return (
-      <main className="min-h-screen p-8">
+      <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 p-8 text-gray-900">
         <div className="mx-auto max-w-3xl rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
-          <h1 className="text-3xl font-bold">{quiz.title}</h1>
-          <p className="mt-2 text-gray-600">{quiz.description || "No description"}</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
+            Quiz Start
+          </p>
+          <h1 className="mt-4 text-3xl font-bold">{quiz.title}</h1>
+          <p className="mt-2 text-sm leading-7 text-gray-600">
+            {quiz.description || "No description"}
+          </p>
 
           <div className="mt-6 space-y-3 rounded-2xl bg-gray-50 p-5 text-sm text-gray-700">
-            <p className="font-semibold text-gray-900">Quiz rules</p>
+            <p className="font-semibold text-gray-900">Quiz Rules</p>
             {quiz.opensAt && <p>Opens: {new Date(quiz.opensAt).toLocaleString()}</p>}
             {quiz.closesAt && <p>Closes: {new Date(quiz.closesAt).toLocaleString()}</p>}
             {quiz.attemptTimeLimitMinutes && (
@@ -362,11 +408,15 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
             <p>At 3 violations, the quiz is auto-submitted.</p>
           </div>
 
-          {error && <p className="mt-4 text-red-600">{error}</p>}
+          {error && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           <button
             onClick={startQuiz}
-            className="mt-6 rounded bg-black px-5 py-3 text-white"
+            className="mt-6 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
           >
             Enter Fullscreen and Start Quiz
           </button>
@@ -376,7 +426,7 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 p-8 text-gray-900">
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <div>
@@ -398,25 +448,30 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
 
         <div className="space-y-6">
           {renderedQuestions.map((q, index) => (
-            <div key={q.id} className="rounded border p-4 bg-white">
+            <div
+              key={q.id}
+              className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm"
+            >
               <p className="font-semibold">
                 {index + 1}. {q.questionText}
               </p>
-              <p className="mt-1 text-sm text-gray-500">
-                Type: {q.questionType}
-              </p>
+              <p className="mt-1 text-sm text-gray-500">Type: {q.questionType}</p>
 
               {renderQuestionInput(q)}
             </div>
           ))}
         </div>
 
-        {error && <p className="mt-4 text-red-600">{error}</p>}
+        {error && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="mt-6 rounded bg-black px-4 py-2 text-white"
+          className="mt-6 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-70"
         >
           {loading ? "Submitting..." : "Submit Quiz"}
         </button>

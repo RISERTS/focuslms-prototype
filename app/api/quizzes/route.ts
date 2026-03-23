@@ -9,6 +9,8 @@ type QuizType =
   | "COMPUTATIONAL"
   | "MIXED";
 
+type TermCategory = "PRELIMS" | "MIDTERMS" | "FINALS";
+
 export async function POST(req: Request) {
   try {
     const session = await getSession();
@@ -34,6 +36,7 @@ export async function POST(req: Request) {
       avoidRepeatedQuestions?: boolean;
       quizType?: QuizType;
       adaptiveMode?: boolean;
+      term?: TermCategory;
       opensAt?: string | null;
       closesAt?: string | null;
       attemptTimeLimitMinutes?: number | null;
@@ -49,6 +52,7 @@ export async function POST(req: Request) {
       avoidRepeatedQuestions,
       quizType,
       adaptiveMode,
+      term,
       opensAt,
       closesAt,
       attemptTimeLimitMinutes,
@@ -63,6 +67,7 @@ export async function POST(req: Request) {
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
+      select: { instructorId: true },
     });
 
     if (!course) {
@@ -78,13 +83,27 @@ export async function POST(req: Request) {
 
     const opensAtDate = opensAt ? new Date(opensAt) : null;
     const closesAtDate = closesAt ? new Date(closesAt) : null;
+    const now = new Date();
 
     if (opensAtDate && Number.isNaN(opensAtDate.getTime())) {
-      return NextResponse.json({ error: "Invalid open date/time." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid open date/time." },
+        { status: 400 }
+      );
     }
 
     if (closesAtDate && Number.isNaN(closesAtDate.getTime())) {
-      return NextResponse.json({ error: "Invalid close date/time." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid close date/time." },
+        { status: 400 }
+      );
+    }
+
+    if (opensAtDate && opensAtDate < now) {
+      return NextResponse.json(
+        { error: "Open date/time cannot be in the past." },
+        { status: 400 }
+      );
     }
 
     if (opensAtDate && closesAtDate && closesAtDate <= opensAtDate) {
@@ -108,6 +127,7 @@ export async function POST(req: Request) {
         avoidRepeatedQuestions: avoidRepeatedQuestions ?? true,
         quizType: quizType ?? "MULTIPLE_CHOICE",
         adaptiveMode: adaptiveMode ?? false,
+        term: term ?? "PRELIMS",
         opensAt: opensAtDate,
         closesAt: closesAtDate,
         attemptTimeLimitMinutes:

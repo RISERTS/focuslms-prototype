@@ -9,6 +9,8 @@ type QuizType =
   | "COMPUTATIONAL"
   | "MIXED";
 
+type TermCategory = "PRELIMS" | "MIDTERMS" | "FINALS";
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ quizId: string }> }
@@ -33,6 +35,7 @@ export async function PATCH(
       title?: string;
       description?: string;
       quizType?: QuizType;
+      term?: TermCategory;
       maxAttempts?: number;
       questionsPerAttempt?: number | null;
       shuffleOptions?: boolean;
@@ -45,8 +48,20 @@ export async function PATCH(
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
-      include: {
-        course: true,
+      select: {
+        id: true,
+        quizType: true,
+        term: true,
+        maxAttempts: true,
+        shuffleOptions: true,
+        avoidRepeatedQuestions: true,
+        adaptiveMode: true,
+        opensAt: true,
+        course: {
+          select: {
+            instructorId: true,
+          },
+        },
       },
     });
 
@@ -70,13 +85,31 @@ export async function PATCH(
 
     const opensAtDate = body.opensAt ? new Date(body.opensAt) : null;
     const closesAtDate = body.closesAt ? new Date(body.closesAt) : null;
+    const now = new Date();
 
     if (opensAtDate && Number.isNaN(opensAtDate.getTime())) {
-      return NextResponse.json({ error: "Invalid open date/time." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid open date/time." },
+        { status: 400 }
+      );
     }
 
     if (closesAtDate && Number.isNaN(closesAtDate.getTime())) {
-      return NextResponse.json({ error: "Invalid close date/time." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid close date/time." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      opensAtDate &&
+      opensAtDate < now &&
+      (!quiz.opensAt || opensAtDate.getTime() !== quiz.opensAt.getTime())
+    ) {
+      return NextResponse.json(
+        { error: "Open date/time cannot be in the past." },
+        { status: 400 }
+      );
     }
 
     if (opensAtDate && closesAtDate && closesAtDate <= opensAtDate) {
@@ -92,12 +125,14 @@ export async function PATCH(
         title: body.title.trim(),
         description: body.description?.trim() || null,
         quizType: body.quizType ?? quiz.quizType,
+        term: body.term ?? quiz.term,
         maxAttempts:
           body.maxAttempts && body.maxAttempts > 0
             ? Number(body.maxAttempts)
             : quiz.maxAttempts,
         questionsPerAttempt:
-          body.questionsPerAttempt === null || body.questionsPerAttempt === undefined
+          body.questionsPerAttempt === null ||
+          body.questionsPerAttempt === undefined
             ? null
             : Number(body.questionsPerAttempt),
         shuffleOptions: body.shuffleOptions ?? quiz.shuffleOptions,

@@ -57,3 +57,22 @@ export const QuestionType = {
 } as const
 
 export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType]
+
+
+export const EnrollmentStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  REMOVED: 'REMOVED'
+} as const
+
+export type EnrollmentStatus = (typeof EnrollmentStatus)[keyof typeof EnrollmentStatus]
+
+
+export const TermCategory = {
+  PRELIMS: 'PRELIMS',
+  MIDTERMS: 'MIDTERMS',
+  FINALS: 'FINALS'
+} as const
+
+export type TermCategory = (typeof TermCategory)[keyof typeof TermCategory]

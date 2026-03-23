@@ -1,7 +1,14 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import InstructorShell from "@/components/instructor/InstructorShell";
+
+function termLabel(term: string) {
+  if (term === "PRELIMS") return "Prelims";
+  if (term === "MIDTERMS") return "Midterms";
+  return "Finals";
+}
 
 export default async function InstructorQuizDetailPage({
   params,
@@ -63,8 +70,8 @@ export default async function InstructorQuizDetailPage({
           variant: "secondary",
         },
         {
-          label: "Review Essay Answers",
-          href: `/instructor/courses/${courseId}/quizzes/${quizId}/essay-reviews`,
+          label: "Review Attempts",
+          href: `/instructor/courses/${courseId}/quizzes/${quizId}/attempts`,
           variant: "secondary",
         },
       ]}
@@ -97,6 +104,9 @@ export default async function InstructorQuizDetailPage({
 
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <span className="rounded-full border border-gray-300 px-4 py-2">
+            Term: {termLabel(quiz.term)}
+          </span>
+          <span className="rounded-full border border-gray-300 px-4 py-2">
             Max Attempts: {quiz.maxAttempts}
           </span>
           <span className="rounded-full border border-gray-300 px-4 py-2">
@@ -110,6 +120,9 @@ export default async function InstructorQuizDetailPage({
           </span>
           <span className="rounded-full border border-gray-300 px-4 py-2">
             Adaptive: {quiz.adaptiveMode ? "Yes" : "No"}
+          </span>
+          <span className="rounded-full border border-gray-300 px-4 py-2">
+            Attempt Limit: {quiz.attemptTimeLimitMinutes ?? "None"} minute(s)
           </span>
         </div>
       </div>
@@ -127,21 +140,30 @@ export default async function InstructorQuizDetailPage({
                 className="rounded-2xl border border-gray-200 bg-gray-50 p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <p className="font-semibold">
-                    {index + 1}. {question.questionText}
-                  </p>
+                  <div>
+                    <p className="font-semibold">
+                      {index + 1}. {question.questionText}
+                    </p>
 
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <span className="rounded-full bg-black px-3 py-1 font-semibold text-white">
-                      {question.questionType}
-                    </span>
-                    <span className="rounded-full border border-gray-300 px-3 py-1">
-                      {question.difficulty}
-                    </span>
-                    <span className="rounded-full border border-gray-300 px-3 py-1">
-                      {question.timeThresholdSeconds}s
-                    </span>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded-full bg-black px-3 py-1 font-semibold text-white">
+                        {question.questionType}
+                      </span>
+                      <span className="rounded-full border border-gray-300 px-3 py-1">
+                        {question.difficulty}
+                      </span>
+                      <span className="rounded-full border border-gray-300 px-3 py-1">
+                        {question.timeThresholdSeconds}s
+                      </span>
+                    </div>
                   </div>
+
+                  <Link
+                    href={`/instructor/courses/${courseId}/quizzes/${quizId}/questions/${question.id}/edit`}
+                    className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                  >
+                    Edit
+                  </Link>
                 </div>
 
                 {question.questionType === "MULTIPLE_CHOICE" ? (

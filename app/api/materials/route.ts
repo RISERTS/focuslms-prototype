@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 
+type TermCategory = "PRELIMS" | "MIDTERMS" | "FINALS";
+
 export async function POST(req: Request) {
   try {
     const session = await getSession();
@@ -20,34 +22,42 @@ export async function POST(req: Request) {
     const body = (await req.json()) as {
       courseId?: string;
       title?: string;
-      description?: string;
+      fileKey?: string;
       fileUrl?: string;
       fileType?: string;
+      term?: TermCategory;
     };
 
-    const { courseId, title, fileUrl, fileType } = body;
+    const { courseId, title, fileKey, fileUrl, fileType, term } = body;
 
-    if (!courseId || !title || !fileUrl || !fileType) {
+    if (
+      !courseId ||
+      !title?.trim() ||
+      !fileKey?.trim() ||
+      !fileUrl?.trim() ||
+      !fileType?.trim()
+    ) {
       return NextResponse.json(
-        { error: "Course, title, link, and type are required." },
+        { error: "Required material fields are missing." },
         { status: 400 }
       );
     }
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
+      select: {
+        id: true,
+        instructorId: true,
+      },
     });
 
     if (!course) {
-      return NextResponse.json(
-        { error: "Course not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Course not found." }, { status: 404 });
     }
 
     if (course.instructorId !== session.userId) {
       return NextResponse.json(
-        { error: "You can only add materials to your own courses." },
+        { error: "You can only add materials to your own course." },
         { status: 403 }
       );
     }
@@ -56,9 +66,10 @@ export async function POST(req: Request) {
       data: {
         courseId,
         title: title.trim(),
+        fileKey: fileKey.trim(),
         fileUrl: fileUrl.trim(),
         fileType: fileType.trim(),
-        fileKey: "",
+        term: term ?? "PRELIMS",
       },
     });
 

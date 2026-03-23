@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import InstructorShell from "@/components/instructor/InstructorShell";
 
+function formatSchedule(date: Date | null) {
+  return date ? date.toLocaleString() : null;
+}
+
 export default async function InstructorCourseDetailPage({
   params,
 }: {
@@ -74,6 +78,21 @@ export default async function InstructorCourseDetailPage({
       description={course.description || "No description"}
       actions={[
         {
+          label: "Edit Settings",
+          href: `/instructor/courses/${course.id}/edit`,
+          variant: "secondary",
+        },
+        {
+          label: "Students",
+          href: `/instructor/courses/${course.id}/students`,
+          variant: "secondary",
+        },
+        {
+          label: "Grades",
+          href: `/instructor/courses/${course.id}/grades`,
+          variant: "secondary",
+        },
+        {
           label: "Add Material",
           href: `/instructor/courses/${course.id}/add-material`,
           variant: "secondary",
@@ -88,9 +107,34 @@ export default async function InstructorCourseDetailPage({
           href: `/instructor/courses/${course.id}/analytics`,
           variant: "secondary",
         },
+        {
+          label: "Danger Zone",
+          href: `/instructor/courses/${course.id}/danger-zone`,
+          variant: "secondary",
+        },
       ]}
     >
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap gap-3 text-sm">
+          {course.courseCode && (
+            <span className="rounded-full border border-gray-300 px-4 py-2">
+              Code: {course.courseCode}
+            </span>
+          )}
+          {course.program && (
+            <span className="rounded-full border border-gray-300 px-4 py-2">
+              Program: {course.program}
+            </span>
+          )}
+          {course.section && (
+            <span className="rounded-full border border-gray-300 px-4 py-2">
+              Section: {course.section}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-6 md:grid-cols-3">
         <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
           <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
             Materials
@@ -173,10 +217,33 @@ export default async function InstructorCourseDetailPage({
                   href={`/instructor/courses/${course.id}/quizzes/${quiz.id}`}
                   className="block rounded-2xl border border-gray-200 bg-gray-50 p-4 transition hover:bg-white"
                 >
-                  <p className="font-semibold">{quiz.title}</p>
-                  <p className="mt-2 text-sm text-gray-600">
-                    {quiz.description || "No description"}
-                  </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{quiz.title}</p>
+                      <p className="mt-2 text-sm text-gray-600">
+                        {quiz.description || "No description"}
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">
+                      {quiz.quizType}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs text-gray-600">
+                    <span className="rounded-full border border-gray-300 px-3 py-1">
+                      Max Attempts: {quiz.maxAttempts}
+                    </span>
+                    <span className="rounded-full border border-gray-300 px-3 py-1">
+                      Adaptive: {quiz.adaptiveMode ? "Yes" : "No"}
+                    </span>
+                    <span className="rounded-full border border-gray-300 px-3 py-1">
+                      Opens: {formatSchedule(quiz.opensAt) || "Immediately"}
+                    </span>
+                    <span className="rounded-full border border-gray-300 px-3 py-1">
+                      Closes: {formatSchedule(quiz.closesAt) || "No close"}
+                    </span>
+                  </div>
                 </Link>
               ))
             )}

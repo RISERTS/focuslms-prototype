@@ -27,14 +27,10 @@ export async function PATCH(
       where: { id: courseId },
     });
 
-    if (!course) {
-      return NextResponse.json({ error: "Course not found." }, { status: 404 });
-    }
-
-    if (course.instructorId !== session.userId) {
+    if (!course || course.instructorId !== session.userId) {
       return NextResponse.json(
-        { error: "You can only update your own course." },
-        { status: 403 }
+        { error: "Course not found." },
+        { status: 404 }
       );
     }
 
@@ -61,6 +57,115 @@ export async function PATCH(
     console.error("Update course settings error:", error);
     return NextResponse.json(
       { error: "Failed to update course settings." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ courseId: string }> }
+) {
+  try {
+    const session = await getSession();
+
+    if (!session || session.role !== "INSTRUCTOR") {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    const { courseId } = await params;
+
+    const body = (await req.json()) as {
+      confirmation?: string;
+    };
+
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course || course.instructorId !== session.userId) {
+      return NextResponse.json(
+        { error: "Course not found." },
+        { status: 404 }
+      );
+    }
+
+    const requiredPhrase = `DELETE ${course.title}`;
+
+    if (body.confirmation !== requiredPhrase) {
+      return NextResponse.json(
+        { error: `Type exactly: ${requiredPhrase}` },
+        { status: 400 }
+      );
+    }
+
+    const quizzes = await prisma.quiz.findMany({
+      where: { courseId },
+      select: { id: true },
+    });
+
+    const quizIds = quizzes.map((quiz) => quiz.id);
+
+    const questions =
+      quizIds.length > 0
+        ? await prisma.question.findMany({
+            where: { quizId: { in: quizIds } },
+            select: { id: true },
+          })
+        : [];
+
+    const attempts =
+      quizIds.length > 0
+        ? await prisma.quizAttempt.findMany({
+            where: { quizId: { in: quizIds } },
+            select: { id: true },
+          })
+        : [];
+
+    const questionIds = questions.map((q) => q.id);
+    const attemptIds = attempts.map((a) => a.id);
+
+    await prisma.$transaction([
+      prisma.quizAnswer.deleteMany({
+        where: {
+          OR: [
+            { questionId: { in: questionIds } },
+            { attemptId: { in: attemptIds } },
+          ],
+        },
+      }),
+      prisma.quizAttempt.deleteMany({
+        where: {
+          id: { in: attemptIds },
+        },
+      }),
+      prisma.question.deleteMany({
+        where: {
+          id: { in: questionIds },
+        },
+      }),
+      prisma.quiz.deleteMany({
+        where: { courseId },
+      }),
+      prisma.material.deleteMany({
+        where: { courseId },
+      }),
+      prisma.activityLog.deleteMany({
+        where: { courseId },
+      }),
+      prisma.enrollment.deleteMany({
+        where: { courseId },
+      }),
+      prisma.course.delete({
+        where: { id: courseId },
+      }),
+    ]);
+
+    return NextResponse.json({ message: "Course deleted successfully." });
+  } catch (error) {
+    console.error("Delete course error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete course." },
       { status: 500 }
     );
   }

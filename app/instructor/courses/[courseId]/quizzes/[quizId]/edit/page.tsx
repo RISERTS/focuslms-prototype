@@ -35,7 +35,7 @@ export default async function EditQuizSettingsPage({
   return (
     <InstructorShell
       title="Edit Quiz Settings"
-      description="Update the quiz title, type, attempts, adaptive mode, and other settings."
+      description="Update the quiz title, term, type, attempts, schedule, and timing settings."
       actions={[
         {
           label: "Back to Quiz",
@@ -51,11 +51,15 @@ export default async function EditQuizSettingsPage({
           title: quiz.title,
           description: quiz.description ?? "",
           quizType: quiz.quizType,
+          term: quiz.term,
           maxAttempts: quiz.maxAttempts,
           questionsPerAttempt: quiz.questionsPerAttempt,
           shuffleOptions: quiz.shuffleOptions,
           avoidRepeatedQuestions: quiz.avoidRepeatedQuestions,
           adaptiveMode: quiz.adaptiveMode,
+          opensAt: quiz.opensAt ? quiz.opensAt.toISOString() : null,
+          closesAt: quiz.closesAt ? quiz.closesAt.toISOString() : null,
+          attemptTimeLimitMinutes: quiz.attemptTimeLimitMinutes,
         }}
       />
     </InstructorShell>
