@@ -1,8 +1,14 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
-import { computeBEI } from "@/lib/bei";
 import InstructorShell from "@/components/instructor/InstructorShell";
+import AnalyticsBarChart from "@/components/analytics/AnalyticsBarChart";
+
+function termLabel(term: string) {
+  if (term === "PRELIMS") return "Prelims";
+  if (term === "MIDTERMS") return "Midterms";
+  return "Finals";
+}
 
 export default async function InstructorCourseAnalyticsPage({
   params,
@@ -19,9 +25,32 @@ export default async function InstructorCourseAnalyticsPage({
 
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      instructorId: true,
+      materials: {
+        select: {
+          id: true,
+          title: true,
+          term: true,
+        },
+      },
+      quizzes: {
+        select: {
+          id: true,
+          title: true,
+          term: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
       enrollments: {
-        include: {
+        where: {
+          status: "APPROVED",
+        },
+        select: {
           user: {
             select: {
               id: true,
@@ -31,17 +60,6 @@ export default async function InstructorCourseAnalyticsPage({
           },
         },
       },
-      quizzes: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-      materials: {
-        select: {
-          id: true,
-        },
-      },
     },
   });
 
@@ -49,222 +67,218 @@ export default async function InstructorCourseAnalyticsPage({
     redirect("/login");
   }
 
-  const studentIds = course.enrollments.map((e) => e.user.id);
-
-  const attempts =
-    studentIds.length > 0
-      ? await prisma.quizAttempt.findMany({
-          where: {
-            studentId: { in: studentIds },
-            quiz: { courseId },
+  const [attempts, activityLogs] = await Promise.all([
+    prisma.quizAttempt.findMany({
+      where: {
+        quiz: {
+          courseId,
+        },
+      },
+      select: {
+        id: true,
+        score: true,
+        studentId: true,
+        startedAt: true,
+        finishedAt: true,
+        quiz: {
+          select: {
+            id: true,
+            title: true,
+            term: true,
           },
-          include: {
-            student: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
+        },
+        student: {
+          select: {
+            name: true,
           },
-          orderBy: {
-            startedAt: "desc",
-          },
-        })
-      : [];
+        },
+      },
+    }),
+    prisma.activityLog.findMany({
+      where: {
+        courseId,
+      },
+      select: {
+        id: true,
+        actionType: true,
+        targetId: true,
+        userId: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    }),
+  ]);
 
-  const logs =
-    studentIds.length > 0
-      ? await prisma.activityLog.findMany({
-          where: {
-            userId: { in: studentIds },
-            courseId,
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-        })
-      : [];
+  const averageScore =
+    attempts.length > 0
+      ? attempts.reduce((sum, attempt) => sum + (attempt.score ?? 0), 0) /
+        attempts.length
+      : 0;
 
-  const totalQuizzes = course.quizzes.length;
+  const attemptsPerQuiz = course.quizzes.map((quiz) => ({
+    label: quiz.title,
+    value: attempts.filter((attempt) => attempt.quiz.id === quiz.id).length,
+    helper: termLabel(quiz.term),
+  }));
 
-  const baseRows = course.enrollments.map((enrollment) => {
-    const student = enrollment.user;
-    const studentAttempts = attempts.filter((a) => a.studentId === student.id);
-    const studentLogs = logs.filter((l) => l.userId === student.id);
-
-    const distinctCompletedQuizIds = new Set(
-      studentAttempts.map((a) => a.quizId)
-    );
-
-    const completionRate =
-      totalQuizzes > 0 ? distinctCompletedQuizIds.size / totalQuizzes : 0;
-
-    const scoredAttempts = studentAttempts.filter(
-      (a): a is typeof a & { score: number } => a.score !== null
-    );
-
-    const averageScore =
-      scoredAttempts.length > 0
-        ? scoredAttempts.reduce((sum, a) => sum + a.score, 0) /
-          scoredAttempts.length
+  const averageScorePerQuiz = course.quizzes.map((quiz) => {
+    const quizAttempts = attempts.filter((attempt) => attempt.quiz.id === quiz.id);
+    const avg =
+      quizAttempts.length > 0
+        ? quizAttempts.reduce((sum, attempt) => sum + (attempt.score ?? 0), 0) /
+          quizAttempts.length
         : 0;
 
-    const timeOnTaskSeconds = studentLogs.reduce(
-      (sum, log) => sum + (log.durationSeconds ?? 0),
-      0
+    return {
+      label: quiz.title,
+      value: avg,
+      helper: termLabel(quiz.term),
+    };
+  });
+
+  const termAverageData = ["PRELIMS", "MIDTERMS", "FINALS"].map((term) => {
+    const termAttempts = attempts.filter((attempt) => attempt.quiz.term === term);
+    const avg =
+      termAttempts.length > 0
+        ? termAttempts.reduce((sum, attempt) => sum + (attempt.score ?? 0), 0) /
+          termAttempts.length
+        : 0;
+
+    return {
+      label: termLabel(term),
+      value: avg,
+    };
+  });
+
+  const materialOpenData = course.materials.map((material) => ({
+    label: material.title,
+    value: activityLogs.filter(
+      (log) => log.actionType === "OPEN_MATERIAL" && log.targetId === material.id
+    ).length,
+    helper: termLabel(material.term),
+  }));
+
+  const studentPerformanceData = course.enrollments.map((enrollment) => {
+    const studentAttempts = attempts.filter(
+      (attempt) => attempt.studentId === enrollment.user.id
     );
 
-    const interactionCount = studentLogs.length;
-
-    const materialsOpened = studentLogs.filter(
-      (log) => log.actionType === "OPEN_MATERIAL"
-    ).length;
-
-    const quizzesSubmitted = studentLogs.filter(
-      (log) => log.actionType === "SUBMIT_QUIZ"
-    ).length;
+    const avg =
+      studentAttempts.length > 0
+        ? studentAttempts.reduce((sum, attempt) => sum + (attempt.score ?? 0), 0) /
+          studentAttempts.length
+        : 0;
 
     return {
-      studentId: student.id,
-      name: student.name,
-      email: student.email,
-      averageScore,
-      completionRate,
-      timeOnTaskSeconds,
-      interactionCount,
-      materialsOpened,
-      quizzesSubmitted,
+      label: enrollment.user.name,
+      value: avg,
+      helper: enrollment.user.email,
     };
   });
 
-  const maxTimeOnTaskSeconds = Math.max(
-    1,
-    ...baseRows.map((row) => row.timeOnTaskSeconds)
-  );
-  const maxInteractionCount = Math.max(
-    1,
-    ...baseRows.map((row) => row.interactionCount)
-  );
+  const actionTypes = [
+    "OPEN_MATERIAL",
+    "START_QUIZ",
+    "ANSWER_QUESTION",
+    "SUBMIT_QUIZ",
+    "VIEW_DASHBOARD",
+  ] as const;
 
-  const rows = baseRows.map((row) => {
-    const { nt, ncr, nif, bei } = computeBEI({
-      timeOnTaskSeconds: row.timeOnTaskSeconds,
-      maxTimeOnTaskSeconds,
-      completionRate: row.completionRate,
-      interactionCount: row.interactionCount,
-      maxInteractionCount,
-    });
-
-    return {
-      ...row,
-      nt,
-      ncr,
-      nif,
-      bei,
-    };
-  });
-
-  const overallAverageScore =
-    rows.length > 0
-      ? rows.reduce((sum, row) => sum + row.averageScore, 0) / rows.length
-      : 0;
-
-  const overallCompletionRate =
-    rows.length > 0
-      ? rows.reduce((sum, row) => sum + row.completionRate, 0) / rows.length
-      : 0;
-
-  const overallBEI =
-    rows.length > 0 ? rows.reduce((sum, row) => sum + row.bei, 0) / rows.length : 0;
+  const activityBreakdownData = actionTypes.map((actionType) => ({
+    label: actionType.replaceAll("_", " "),
+    value: activityLogs.filter((log) => log.actionType === actionType).length,
+  }));
 
   return (
     <InstructorShell
       title={`${course.title} Analytics`}
-      description="Monitor learner performance, engagement, completion, and Behavioral Engagement Index (BEI)."
+      description="View course-level activity, quiz trends, material engagement, and student performance."
       actions={[
         {
           label: "Back to Course",
-          href: `/instructor/courses/${course.id}`,
+          href: `/instructor/courses/${courseId}`,
           variant: "secondary",
         },
       ]}
     >
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-5">
         <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
           <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
-            Average Score
+            Approved Students
           </p>
-          <p className="mt-3 text-3xl font-bold">
-            {overallAverageScore.toFixed(2)}%
-          </p>
+          <p className="mt-3 text-3xl font-bold">{course.enrollments.length}</p>
         </div>
 
         <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
           <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
-            Completion Rate
+            Materials
           </p>
-          <p className="mt-3 text-3xl font-bold">
-            {(overallCompletionRate * 100).toFixed(2)}%
+          <p className="mt-3 text-3xl font-bold">{course.materials.length}</p>
+        </div>
+
+        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
+            Quizzes
           </p>
+          <p className="mt-3 text-3xl font-bold">{course.quizzes.length}</p>
+        </div>
+
+        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
+            Total Attempts
+          </p>
+          <p className="mt-3 text-3xl font-bold">{attempts.length}</p>
         </div>
 
         <div className="rounded-3xl border border-gray-200 bg-black p-6 text-white shadow-xl">
           <p className="text-sm uppercase tracking-[0.2em] text-gray-300">
-            Average BEI
+            Average Score
           </p>
-          <p className="mt-3 text-3xl font-bold">{overallBEI.toFixed(2)}</p>
+          <p className="mt-3 text-3xl font-bold">{averageScore.toFixed(2)}%</p>
         </div>
       </div>
 
-      <div className="mt-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-2xl font-bold">Student Analytics</h2>
+      <div className="mt-8 grid gap-6 xl:grid-cols-2">
+        <AnalyticsBarChart
+          title="Attempts per Quiz"
+          data={attemptsPerQuiz}
+          emptyMessage="No quiz attempts yet."
+        />
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 text-left text-gray-500">
-                <th className="px-3 py-3">Student</th>
-                <th className="px-3 py-3">Avg Score</th>
-                <th className="px-3 py-3">Completion</th>
-                <th className="px-3 py-3">Time-on-Task</th>
-                <th className="px-3 py-3">Interactions</th>
-                <th className="px-3 py-3">Materials Opened</th>
-                <th className="px-3 py-3">Quizzes Submitted</th>
-                <th className="px-3 py-3">BEI</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-3 py-6 text-center text-gray-600">
-                    No student analytics available yet.
-                  </td>
-                </tr>
-              ) : (
-                rows.map((row) => (
-                  <tr key={row.studentId} className="border-b border-gray-100">
-                    <td className="px-3 py-4">
-                      <div className="font-medium">{row.name}</div>
-                      <div className="text-gray-500">{row.email}</div>
-                    </td>
-                    <td className="px-3 py-4">{row.averageScore.toFixed(2)}%</td>
-                    <td className="px-3 py-4">
-                      {(row.completionRate * 100).toFixed(2)}%
-                    </td>
-                    <td className="px-3 py-4">{row.timeOnTaskSeconds}s</td>
-                    <td className="px-3 py-4">{row.interactionCount}</td>
-                    <td className="px-3 py-4">{row.materialsOpened}</td>
-                    <td className="px-3 py-4">{row.quizzesSubmitted}</td>
-                    <td className="px-3 py-4 font-semibold">
-                      {row.bei.toFixed(2)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AnalyticsBarChart
+          title="Average Score per Quiz"
+          data={averageScorePerQuiz}
+          suffix="%"
+          emptyMessage="No scored attempts yet."
+        />
+
+        <AnalyticsBarChart
+          title="Average Score by Term"
+          data={termAverageData}
+          suffix="%"
+          emptyMessage="No term score data yet."
+        />
+
+        <AnalyticsBarChart
+          title="Material Opens"
+          data={materialOpenData}
+          emptyMessage="No material opens recorded yet."
+        />
+
+        <AnalyticsBarChart
+          title="Student Performance"
+          data={studentPerformanceData}
+          suffix="%"
+          emptyMessage="No student attempt data yet."
+        />
+
+        <AnalyticsBarChart
+          title="Activity Breakdown"
+          data={activityBreakdownData}
+          emptyMessage="No activity logs recorded yet."
+        />
       </div>
     </InstructorShell>
   );

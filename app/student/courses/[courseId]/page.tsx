@@ -126,6 +126,11 @@ export default async function StudentCourseDetailPage({
           variant: "secondary",
         },
         {
+          label: "Analytics",
+          href: `/student/courses/${course.id}/analytics`,
+          variant: "secondary",
+        },
+        {
           label: "Browse Courses",
           href: "/student/courses",
           variant: "secondary",
