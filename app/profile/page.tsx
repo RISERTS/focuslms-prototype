@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import StudentShell from "@/components/student/StudentShell";
 import InstructorShell from "@/components/instructor/InstructorShell";
@@ -11,11 +12,26 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.userId,
+    },
+    select: {
+      name: true,
+      email: true,
+      role: true,
+    },
+  });
+
+  if (!user) {
+    redirect("/login");
+  }
+
   const content = (
     <ProfileForm
-      initialName={session.name ?? ""}
-      email={session.email}
-      role={session.role}
+      initialName={user.name ?? ""}
+      email={user.email}
+      role={user.role}
     />
   );
 
@@ -23,8 +39,8 @@ export default async function ProfilePage() {
     return (
       <InstructorShell
         title="Profile Settings"
-        description="Update your display name and password."
-        sessionEmail={session.email}
+        description="Update your account name and password."
+        sessionEmail={user.email}
       >
         {content}
       </InstructorShell>
@@ -34,8 +50,8 @@ export default async function ProfilePage() {
   return (
     <StudentShell
       title="Profile Settings"
-      description="Update your display name and password."
-      sessionEmail={session.email}
+      description="Update your account name and password."
+      sessionEmail={user.email}
     >
       {content}
     </StudentShell>
