@@ -169,11 +169,28 @@ export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type EnumMaterialTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.MaterialType | Prisma.EnumMaterialTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.MaterialType[] | Prisma.ListEnumMaterialTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MaterialType[] | Prisma.ListEnumMaterialTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMaterialTypeFilter<$PrismaModel> | $Enums.MaterialType
+}
+
 export type EnumTermCategoryFilter<$PrismaModel = never> = {
   equals?: $Enums.TermCategory | Prisma.EnumTermCategoryFieldRefInput<$PrismaModel>
   in?: $Enums.TermCategory[] | Prisma.ListEnumTermCategoryFieldRefInput<$PrismaModel>
   notIn?: $Enums.TermCategory[] | Prisma.ListEnumTermCategoryFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumTermCategoryFilter<$PrismaModel> | $Enums.TermCategory
+}
+
+export type EnumMaterialTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MaterialType | Prisma.EnumMaterialTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.MaterialType[] | Prisma.ListEnumMaterialTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MaterialType[] | Prisma.ListEnumMaterialTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMaterialTypeWithAggregatesFilter<$PrismaModel> | $Enums.MaterialType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMaterialTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMaterialTypeFilter<$PrismaModel>
 }
 
 export type EnumTermCategoryWithAggregatesFilter<$PrismaModel = never> = {
@@ -516,11 +533,28 @@ export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type NestedEnumMaterialTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.MaterialType | Prisma.EnumMaterialTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.MaterialType[] | Prisma.ListEnumMaterialTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MaterialType[] | Prisma.ListEnumMaterialTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMaterialTypeFilter<$PrismaModel> | $Enums.MaterialType
+}
+
 export type NestedEnumTermCategoryFilter<$PrismaModel = never> = {
   equals?: $Enums.TermCategory | Prisma.EnumTermCategoryFieldRefInput<$PrismaModel>
   in?: $Enums.TermCategory[] | Prisma.ListEnumTermCategoryFieldRefInput<$PrismaModel>
   notIn?: $Enums.TermCategory[] | Prisma.ListEnumTermCategoryFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumTermCategoryFilter<$PrismaModel> | $Enums.TermCategory
+}
+
+export type NestedEnumMaterialTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MaterialType | Prisma.EnumMaterialTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.MaterialType[] | Prisma.ListEnumMaterialTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MaterialType[] | Prisma.ListEnumMaterialTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMaterialTypeWithAggregatesFilter<$PrismaModel> | $Enums.MaterialType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMaterialTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMaterialTypeFilter<$PrismaModel>
 }
 
 export type NestedEnumTermCategoryWithAggregatesFilter<$PrismaModel = never> = {

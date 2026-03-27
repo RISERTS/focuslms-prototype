@@ -59,7 +59,8 @@ export const ModelName = {
   Question: 'Question',
   QuizAttempt: 'QuizAttempt',
   ActivityLog: 'ActivityLog',
-  QuizAnswer: 'QuizAnswer'
+  QuizAnswer: 'QuizAnswer',
+  PasswordResetOtp: 'PasswordResetOtp'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -121,11 +122,15 @@ export const MaterialScalarFieldEnum = {
   id: 'id',
   courseId: 'courseId',
   title: 'title',
+  materialType: 'materialType',
+  contentText: 'contentText',
   fileKey: 'fileKey',
   fileUrl: 'fileUrl',
   fileType: 'fileType',
+  originalFileName: 'originalFileName',
   term: 'term',
-  uploadedAt: 'uploadedAt'
+  uploadedAt: 'uploadedAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type MaterialScalarFieldEnum = (typeof MaterialScalarFieldEnum)[keyof typeof MaterialScalarFieldEnum]
@@ -209,6 +214,21 @@ export const QuizAnswerScalarFieldEnum = {
 } as const
 
 export type QuizAnswerScalarFieldEnum = (typeof QuizAnswerScalarFieldEnum)[keyof typeof QuizAnswerScalarFieldEnum]
+
+
+export const PasswordResetOtpScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  codeHash: 'codeHash',
+  expiresAt: 'expiresAt',
+  lastSentAt: 'lastSentAt',
+  failedAttempts: 'failedAttempts',
+  createdAt: 'createdAt',
+  consumedAt: 'consumedAt',
+  invalidatedAt: 'invalidatedAt'
+} as const
+
+export type PasswordResetOtpScalarFieldEnum = (typeof PasswordResetOtpScalarFieldEnum)[keyof typeof PasswordResetOtpScalarFieldEnum]
 
 
 export const SortOrder = {

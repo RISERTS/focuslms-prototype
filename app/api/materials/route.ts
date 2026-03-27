@@ -1,44 +1,32 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
+import { saveMaterialFile } from "@/lib/material-storage";
 
 type TermCategory = "PRELIMS" | "MIDTERMS" | "FINALS";
+type MaterialType = "TEXT" | "LINK" | "FILE";
 
 export async function POST(req: Request) {
   try {
     const session = await getSession();
 
-    if (!session) {
+    if (!session || session.role !== "INSTRUCTOR") {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    if (session.role !== "INSTRUCTOR") {
+    const formData = await req.formData();
+
+    const courseId = String(formData.get("courseId") || "").trim();
+    const title = String(formData.get("title") || "").trim();
+    const materialType = String(formData.get("materialType") || "LINK") as MaterialType;
+    const term = String(formData.get("term") || "PRELIMS") as TermCategory;
+    const contentText = String(formData.get("contentText") || "").trim();
+    const linkUrl = String(formData.get("linkUrl") || "").trim();
+    const uploadedFile = formData.get("file");
+
+    if (!courseId || !title) {
       return NextResponse.json(
-        { error: "Only instructors can add materials." },
-        { status: 403 }
-      );
-    }
-
-    const body = (await req.json()) as {
-      courseId?: string;
-      title?: string;
-      fileKey?: string;
-      fileUrl?: string;
-      fileType?: string;
-      term?: TermCategory;
-    };
-
-    const { courseId, title, fileKey, fileUrl, fileType, term } = body;
-
-    if (
-      !courseId ||
-      !title?.trim() ||
-      !fileKey?.trim() ||
-      !fileUrl?.trim() ||
-      !fileType?.trim()
-    ) {
-      return NextResponse.json(
-        { error: "Required material fields are missing." },
+        { error: "Course and material title are required." },
         { status: 400 }
       );
     }
@@ -62,14 +50,59 @@ export async function POST(req: Request) {
       );
     }
 
+    let fileKey: string | null = null;
+    let fileUrl: string | null = null;
+    let fileType: string | null = null;
+    let originalFileName: string | null = null;
+    let normalizedContentText: string | null = null;
+
+    if (materialType === "TEXT") {
+      if (!contentText) {
+        return NextResponse.json(
+          { error: "Text content is required for text materials." },
+          { status: 400 }
+        );
+      }
+
+      normalizedContentText = contentText;
+      fileType = "TEXT";
+    } else if (materialType === "LINK") {
+      if (!linkUrl) {
+        return NextResponse.json(
+          { error: "A link URL is required for link materials." },
+          { status: 400 }
+        );
+      }
+
+      fileKey = linkUrl;
+      fileUrl = linkUrl;
+      fileType = "LINK";
+    } else {
+      if (!(uploadedFile instanceof File) || uploadedFile.size === 0) {
+        return NextResponse.json(
+          { error: "A file is required for file materials." },
+          { status: 400 }
+        );
+      }
+
+      const saved = await saveMaterialFile(uploadedFile);
+      fileKey = saved.fileKey;
+      fileUrl = saved.fileUrl;
+      fileType = saved.fileType;
+      originalFileName = saved.originalFileName;
+    }
+
     const material = await prisma.material.create({
       data: {
         courseId,
-        title: title.trim(),
-        fileKey: fileKey.trim(),
-        fileUrl: fileUrl.trim(),
-        fileType: fileType.trim(),
-        term: term ?? "PRELIMS",
+        title,
+        materialType,
+        contentText: normalizedContentText,
+        fileKey,
+        fileUrl,
+        fileType,
+        originalFileName,
+        term,
       },
     });
 

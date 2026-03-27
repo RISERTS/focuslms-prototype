@@ -3,9 +3,16 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import InstructorShell from "@/components/instructor/InstructorShell";
+import DeleteMaterialButton from "@/components/materials/DeleteMaterialButton";
 
 function formatSchedule(date: Date | null) {
   return date ? date.toLocaleString() : null;
+}
+
+function termLabel(term: string) {
+  if (term === "PRELIMS") return "Prelims";
+  if (term === "MIDTERMS") return "Midterms";
+  return "Finals";
 }
 
 export default async function InstructorCourseDetailPage({
@@ -15,11 +22,7 @@ export default async function InstructorCourseDetailPage({
 }) {
   const session = await getSession();
 
-  if (!session) {
-    redirect("/login");
-  }
-
-  if (session.role !== "INSTRUCTOR") {
+  if (!session || session.role !== "INSTRUCTOR") {
     redirect("/login");
   }
 
@@ -48,27 +51,7 @@ export default async function InstructorCourseDetailPage({
     },
   });
 
-  if (!course) {
-    return (
-      <InstructorShell
-        title="Course Not Found"
-        description="The requested course could not be found."
-        actions={[
-          {
-            label: "Back to Courses",
-            href: "/instructor/courses",
-            variant: "secondary",
-          },
-        ]}
-      >
-        <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center shadow-sm">
-          <p className="text-lg font-semibold">This course does not exist.</p>
-        </div>
-      </InstructorShell>
-    );
-  }
-
-  if (course.instructorId !== session.userId) {
+  if (!course || course.instructorId !== session.userId) {
     redirect("/login");
   }
 
@@ -163,7 +146,7 @@ export default async function InstructorCourseDetailPage({
             <h2 className="text-2xl font-bold">Materials</h2>
             <Link
               href={`/instructor/courses/${course.id}/add-material`}
-              className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
             >
               Add
             </Link>
@@ -178,18 +161,53 @@ export default async function InstructorCourseDetailPage({
                   key={material.id}
                   className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
                 >
-                  <p className="font-semibold">{material.title}</p>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Type: {material.fileType}
-                  </p>
-                  <a
-                    href={material.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-block text-sm font-medium underline"
-                  >
-                    Open Material
-                  </a>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{material.title}</p>
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                        <span className="rounded-full border border-gray-300 px-3 py-1">
+                          {material.materialType}
+                        </span>
+                        <span className="rounded-full border border-gray-300 px-3 py-1">
+                          {termLabel(material.term)}
+                        </span>
+                        {material.fileType && (
+                          <span className="rounded-full border border-gray-300 px-3 py-1">
+                            {material.fileType}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {material.materialType === "TEXT" ? (
+                      <Link
+                        href={`/instructor/courses/${course.id}/materials/${material.id}`}
+                        className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                      >
+                        Open Text
+                      </Link>
+                    ) : material.fileUrl ? (
+                      <a
+                        href={material.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                      >
+                        Open Material
+                      </a>
+                    ) : null}
+
+                    <Link
+                      href={`/instructor/courses/${course.id}/materials/${material.id}/edit`}
+                      className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+                    >
+                      Edit
+                    </Link>
+
+                    <DeleteMaterialButton materialId={material.id} />
+                  </div>
                 </div>
               ))
             )}
@@ -201,7 +219,7 @@ export default async function InstructorCourseDetailPage({
             <h2 className="text-2xl font-bold">Quizzes</h2>
             <Link
               href={`/instructor/courses/${course.id}/quizzes`}
-              className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+              className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 transition hover:bg-violet-100"
             >
               Open
             </Link>

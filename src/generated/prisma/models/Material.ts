@@ -28,33 +28,45 @@ export type MaterialMinAggregateOutputType = {
   id: string | null
   courseId: string | null
   title: string | null
+  materialType: $Enums.MaterialType | null
+  contentText: string | null
   fileKey: string | null
   fileUrl: string | null
   fileType: string | null
+  originalFileName: string | null
   term: $Enums.TermCategory | null
   uploadedAt: Date | null
+  updatedAt: Date | null
 }
 
 export type MaterialMaxAggregateOutputType = {
   id: string | null
   courseId: string | null
   title: string | null
+  materialType: $Enums.MaterialType | null
+  contentText: string | null
   fileKey: string | null
   fileUrl: string | null
   fileType: string | null
+  originalFileName: string | null
   term: $Enums.TermCategory | null
   uploadedAt: Date | null
+  updatedAt: Date | null
 }
 
 export type MaterialCountAggregateOutputType = {
   id: number
   courseId: number
   title: number
+  materialType: number
+  contentText: number
   fileKey: number
   fileUrl: number
   fileType: number
+  originalFileName: number
   term: number
   uploadedAt: number
+  updatedAt: number
   _all: number
 }
 
@@ -63,33 +75,45 @@ export type MaterialMinAggregateInputType = {
   id?: true
   courseId?: true
   title?: true
+  materialType?: true
+  contentText?: true
   fileKey?: true
   fileUrl?: true
   fileType?: true
+  originalFileName?: true
   term?: true
   uploadedAt?: true
+  updatedAt?: true
 }
 
 export type MaterialMaxAggregateInputType = {
   id?: true
   courseId?: true
   title?: true
+  materialType?: true
+  contentText?: true
   fileKey?: true
   fileUrl?: true
   fileType?: true
+  originalFileName?: true
   term?: true
   uploadedAt?: true
+  updatedAt?: true
 }
 
 export type MaterialCountAggregateInputType = {
   id?: true
   courseId?: true
   title?: true
+  materialType?: true
+  contentText?: true
   fileKey?: true
   fileUrl?: true
   fileType?: true
+  originalFileName?: true
   term?: true
   uploadedAt?: true
+  updatedAt?: true
   _all?: true
 }
 
@@ -169,11 +193,15 @@ export type MaterialGroupByOutputType = {
   id: string
   courseId: string
   title: string
-  fileKey: string
-  fileUrl: string
-  fileType: string
+  materialType: $Enums.MaterialType
+  contentText: string | null
+  fileKey: string | null
+  fileUrl: string | null
+  fileType: string | null
+  originalFileName: string | null
   term: $Enums.TermCategory
   uploadedAt: Date
+  updatedAt: Date
   _count: MaterialCountAggregateOutputType | null
   _min: MaterialMinAggregateOutputType | null
   _max: MaterialMaxAggregateOutputType | null
@@ -201,11 +229,15 @@ export type MaterialWhereInput = {
   id?: Prisma.StringFilter<"Material"> | string
   courseId?: Prisma.StringFilter<"Material"> | string
   title?: Prisma.StringFilter<"Material"> | string
-  fileKey?: Prisma.StringFilter<"Material"> | string
-  fileUrl?: Prisma.StringFilter<"Material"> | string
-  fileType?: Prisma.StringFilter<"Material"> | string
+  materialType?: Prisma.EnumMaterialTypeFilter<"Material"> | $Enums.MaterialType
+  contentText?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileKey?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileUrl?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileType?: Prisma.StringNullableFilter<"Material"> | string | null
+  originalFileName?: Prisma.StringNullableFilter<"Material"> | string | null
   term?: Prisma.EnumTermCategoryFilter<"Material"> | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFilter<"Material"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Material"> | Date | string
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
 }
 
@@ -213,11 +245,15 @@ export type MaterialOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  fileKey?: Prisma.SortOrder
-  fileUrl?: Prisma.SortOrder
-  fileType?: Prisma.SortOrder
+  materialType?: Prisma.SortOrder
+  contentText?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileType?: Prisma.SortOrderInput | Prisma.SortOrder
+  originalFileName?: Prisma.SortOrderInput | Prisma.SortOrder
   term?: Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   course?: Prisma.CourseOrderByWithRelationInput
 }
 
@@ -228,11 +264,15 @@ export type MaterialWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.MaterialWhereInput | Prisma.MaterialWhereInput[]
   courseId?: Prisma.StringFilter<"Material"> | string
   title?: Prisma.StringFilter<"Material"> | string
-  fileKey?: Prisma.StringFilter<"Material"> | string
-  fileUrl?: Prisma.StringFilter<"Material"> | string
-  fileType?: Prisma.StringFilter<"Material"> | string
+  materialType?: Prisma.EnumMaterialTypeFilter<"Material"> | $Enums.MaterialType
+  contentText?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileKey?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileUrl?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileType?: Prisma.StringNullableFilter<"Material"> | string | null
+  originalFileName?: Prisma.StringNullableFilter<"Material"> | string | null
   term?: Prisma.EnumTermCategoryFilter<"Material"> | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFilter<"Material"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Material"> | Date | string
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
 }, "id">
 
@@ -240,11 +280,15 @@ export type MaterialOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  fileKey?: Prisma.SortOrder
-  fileUrl?: Prisma.SortOrder
-  fileType?: Prisma.SortOrder
+  materialType?: Prisma.SortOrder
+  contentText?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileType?: Prisma.SortOrderInput | Prisma.SortOrder
+  originalFileName?: Prisma.SortOrderInput | Prisma.SortOrder
   term?: Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   _count?: Prisma.MaterialCountOrderByAggregateInput
   _max?: Prisma.MaterialMaxOrderByAggregateInput
   _min?: Prisma.MaterialMinOrderByAggregateInput
@@ -257,21 +301,29 @@ export type MaterialScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Material"> | string
   courseId?: Prisma.StringWithAggregatesFilter<"Material"> | string
   title?: Prisma.StringWithAggregatesFilter<"Material"> | string
-  fileKey?: Prisma.StringWithAggregatesFilter<"Material"> | string
-  fileUrl?: Prisma.StringWithAggregatesFilter<"Material"> | string
-  fileType?: Prisma.StringWithAggregatesFilter<"Material"> | string
+  materialType?: Prisma.EnumMaterialTypeWithAggregatesFilter<"Material"> | $Enums.MaterialType
+  contentText?: Prisma.StringNullableWithAggregatesFilter<"Material"> | string | null
+  fileKey?: Prisma.StringNullableWithAggregatesFilter<"Material"> | string | null
+  fileUrl?: Prisma.StringNullableWithAggregatesFilter<"Material"> | string | null
+  fileType?: Prisma.StringNullableWithAggregatesFilter<"Material"> | string | null
+  originalFileName?: Prisma.StringNullableWithAggregatesFilter<"Material"> | string | null
   term?: Prisma.EnumTermCategoryWithAggregatesFilter<"Material"> | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeWithAggregatesFilter<"Material"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Material"> | Date | string
 }
 
 export type MaterialCreateInput = {
   id?: string
   title: string
-  fileKey: string
-  fileUrl: string
-  fileType: string
+  materialType?: $Enums.MaterialType
+  contentText?: string | null
+  fileKey?: string | null
+  fileUrl?: string | null
+  fileType?: string | null
+  originalFileName?: string | null
   term?: $Enums.TermCategory
   uploadedAt?: Date | string
+  updatedAt?: Date | string
   course: Prisma.CourseCreateNestedOneWithoutMaterialsInput
 }
 
@@ -279,21 +331,29 @@ export type MaterialUncheckedCreateInput = {
   id?: string
   courseId: string
   title: string
-  fileKey: string
-  fileUrl: string
-  fileType: string
+  materialType?: $Enums.MaterialType
+  contentText?: string | null
+  fileKey?: string | null
+  fileUrl?: string | null
+  fileType?: string | null
+  originalFileName?: string | null
   term?: $Enums.TermCategory
   uploadedAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type MaterialUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  fileKey?: Prisma.StringFieldUpdateOperationsInput | string
-  fileUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  materialType?: Prisma.EnumMaterialTypeFieldUpdateOperationsInput | $Enums.MaterialType
+  contentText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  originalFileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   term?: Prisma.EnumTermCategoryFieldUpdateOperationsInput | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   course?: Prisma.CourseUpdateOneRequiredWithoutMaterialsNestedInput
 }
 
@@ -301,43 +361,59 @@ export type MaterialUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   courseId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  fileKey?: Prisma.StringFieldUpdateOperationsInput | string
-  fileUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  materialType?: Prisma.EnumMaterialTypeFieldUpdateOperationsInput | $Enums.MaterialType
+  contentText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  originalFileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   term?: Prisma.EnumTermCategoryFieldUpdateOperationsInput | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MaterialCreateManyInput = {
   id?: string
   courseId: string
   title: string
-  fileKey: string
-  fileUrl: string
-  fileType: string
+  materialType?: $Enums.MaterialType
+  contentText?: string | null
+  fileKey?: string | null
+  fileUrl?: string | null
+  fileType?: string | null
+  originalFileName?: string | null
   term?: $Enums.TermCategory
   uploadedAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type MaterialUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  fileKey?: Prisma.StringFieldUpdateOperationsInput | string
-  fileUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  materialType?: Prisma.EnumMaterialTypeFieldUpdateOperationsInput | $Enums.MaterialType
+  contentText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  originalFileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   term?: Prisma.EnumTermCategoryFieldUpdateOperationsInput | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MaterialUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   courseId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  fileKey?: Prisma.StringFieldUpdateOperationsInput | string
-  fileUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  materialType?: Prisma.EnumMaterialTypeFieldUpdateOperationsInput | $Enums.MaterialType
+  contentText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  originalFileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   term?: Prisma.EnumTermCategoryFieldUpdateOperationsInput | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MaterialListRelationFilter = {
@@ -354,33 +430,45 @@ export type MaterialCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   title?: Prisma.SortOrder
+  materialType?: Prisma.SortOrder
+  contentText?: Prisma.SortOrder
   fileKey?: Prisma.SortOrder
   fileUrl?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
+  originalFileName?: Prisma.SortOrder
   term?: Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type MaterialMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   title?: Prisma.SortOrder
+  materialType?: Prisma.SortOrder
+  contentText?: Prisma.SortOrder
   fileKey?: Prisma.SortOrder
   fileUrl?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
+  originalFileName?: Prisma.SortOrder
   term?: Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type MaterialMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   title?: Prisma.SortOrder
+  materialType?: Prisma.SortOrder
+  contentText?: Prisma.SortOrder
   fileKey?: Prisma.SortOrder
   fileUrl?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
+  originalFileName?: Prisma.SortOrder
   term?: Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type MaterialCreateNestedManyWithoutCourseInput = {
@@ -425,6 +513,10 @@ export type MaterialUncheckedUpdateManyWithoutCourseNestedInput = {
   deleteMany?: Prisma.MaterialScalarWhereInput | Prisma.MaterialScalarWhereInput[]
 }
 
+export type EnumMaterialTypeFieldUpdateOperationsInput = {
+  set?: $Enums.MaterialType
+}
+
 export type EnumTermCategoryFieldUpdateOperationsInput = {
   set?: $Enums.TermCategory
 }
@@ -432,21 +524,29 @@ export type EnumTermCategoryFieldUpdateOperationsInput = {
 export type MaterialCreateWithoutCourseInput = {
   id?: string
   title: string
-  fileKey: string
-  fileUrl: string
-  fileType: string
+  materialType?: $Enums.MaterialType
+  contentText?: string | null
+  fileKey?: string | null
+  fileUrl?: string | null
+  fileType?: string | null
+  originalFileName?: string | null
   term?: $Enums.TermCategory
   uploadedAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type MaterialUncheckedCreateWithoutCourseInput = {
   id?: string
   title: string
-  fileKey: string
-  fileUrl: string
-  fileType: string
+  materialType?: $Enums.MaterialType
+  contentText?: string | null
+  fileKey?: string | null
+  fileUrl?: string | null
+  fileType?: string | null
+  originalFileName?: string | null
   term?: $Enums.TermCategory
   uploadedAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type MaterialCreateOrConnectWithoutCourseInput = {
@@ -482,51 +582,71 @@ export type MaterialScalarWhereInput = {
   id?: Prisma.StringFilter<"Material"> | string
   courseId?: Prisma.StringFilter<"Material"> | string
   title?: Prisma.StringFilter<"Material"> | string
-  fileKey?: Prisma.StringFilter<"Material"> | string
-  fileUrl?: Prisma.StringFilter<"Material"> | string
-  fileType?: Prisma.StringFilter<"Material"> | string
+  materialType?: Prisma.EnumMaterialTypeFilter<"Material"> | $Enums.MaterialType
+  contentText?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileKey?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileUrl?: Prisma.StringNullableFilter<"Material"> | string | null
+  fileType?: Prisma.StringNullableFilter<"Material"> | string | null
+  originalFileName?: Prisma.StringNullableFilter<"Material"> | string | null
   term?: Prisma.EnumTermCategoryFilter<"Material"> | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFilter<"Material"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Material"> | Date | string
 }
 
 export type MaterialCreateManyCourseInput = {
   id?: string
   title: string
-  fileKey: string
-  fileUrl: string
-  fileType: string
+  materialType?: $Enums.MaterialType
+  contentText?: string | null
+  fileKey?: string | null
+  fileUrl?: string | null
+  fileType?: string | null
+  originalFileName?: string | null
   term?: $Enums.TermCategory
   uploadedAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type MaterialUpdateWithoutCourseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  fileKey?: Prisma.StringFieldUpdateOperationsInput | string
-  fileUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  materialType?: Prisma.EnumMaterialTypeFieldUpdateOperationsInput | $Enums.MaterialType
+  contentText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  originalFileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   term?: Prisma.EnumTermCategoryFieldUpdateOperationsInput | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MaterialUncheckedUpdateWithoutCourseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  fileKey?: Prisma.StringFieldUpdateOperationsInput | string
-  fileUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  materialType?: Prisma.EnumMaterialTypeFieldUpdateOperationsInput | $Enums.MaterialType
+  contentText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  originalFileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   term?: Prisma.EnumTermCategoryFieldUpdateOperationsInput | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MaterialUncheckedUpdateManyWithoutCourseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  fileKey?: Prisma.StringFieldUpdateOperationsInput | string
-  fileUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  materialType?: Prisma.EnumMaterialTypeFieldUpdateOperationsInput | $Enums.MaterialType
+  contentText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  originalFileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   term?: Prisma.EnumTermCategoryFieldUpdateOperationsInput | $Enums.TermCategory
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
@@ -535,11 +655,15 @@ export type MaterialSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   id?: boolean
   courseId?: boolean
   title?: boolean
+  materialType?: boolean
+  contentText?: boolean
   fileKey?: boolean
   fileUrl?: boolean
   fileType?: boolean
+  originalFileName?: boolean
   term?: boolean
   uploadedAt?: boolean
+  updatedAt?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["material"]>
 
@@ -547,11 +671,15 @@ export type MaterialSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   courseId?: boolean
   title?: boolean
+  materialType?: boolean
+  contentText?: boolean
   fileKey?: boolean
   fileUrl?: boolean
   fileType?: boolean
+  originalFileName?: boolean
   term?: boolean
   uploadedAt?: boolean
+  updatedAt?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["material"]>
 
@@ -559,11 +687,15 @@ export type MaterialSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   courseId?: boolean
   title?: boolean
+  materialType?: boolean
+  contentText?: boolean
   fileKey?: boolean
   fileUrl?: boolean
   fileType?: boolean
+  originalFileName?: boolean
   term?: boolean
   uploadedAt?: boolean
+  updatedAt?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["material"]>
 
@@ -571,14 +703,18 @@ export type MaterialSelectScalar = {
   id?: boolean
   courseId?: boolean
   title?: boolean
+  materialType?: boolean
+  contentText?: boolean
   fileKey?: boolean
   fileUrl?: boolean
   fileType?: boolean
+  originalFileName?: boolean
   term?: boolean
   uploadedAt?: boolean
+  updatedAt?: boolean
 }
 
-export type MaterialOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "courseId" | "title" | "fileKey" | "fileUrl" | "fileType" | "term" | "uploadedAt", ExtArgs["result"]["material"]>
+export type MaterialOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "courseId" | "title" | "materialType" | "contentText" | "fileKey" | "fileUrl" | "fileType" | "originalFileName" | "term" | "uploadedAt" | "updatedAt", ExtArgs["result"]["material"]>
 export type MaterialInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
 }
@@ -598,11 +734,15 @@ export type $MaterialPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     id: string
     courseId: string
     title: string
-    fileKey: string
-    fileUrl: string
-    fileType: string
+    materialType: $Enums.MaterialType
+    contentText: string | null
+    fileKey: string | null
+    fileUrl: string | null
+    fileType: string | null
+    originalFileName: string | null
     term: $Enums.TermCategory
     uploadedAt: Date
+    updatedAt: Date
   }, ExtArgs["result"]["material"]>
   composites: {}
 }
@@ -1030,11 +1170,15 @@ export interface MaterialFieldRefs {
   readonly id: Prisma.FieldRef<"Material", 'String'>
   readonly courseId: Prisma.FieldRef<"Material", 'String'>
   readonly title: Prisma.FieldRef<"Material", 'String'>
+  readonly materialType: Prisma.FieldRef<"Material", 'MaterialType'>
+  readonly contentText: Prisma.FieldRef<"Material", 'String'>
   readonly fileKey: Prisma.FieldRef<"Material", 'String'>
   readonly fileUrl: Prisma.FieldRef<"Material", 'String'>
   readonly fileType: Prisma.FieldRef<"Material", 'String'>
+  readonly originalFileName: Prisma.FieldRef<"Material", 'String'>
   readonly term: Prisma.FieldRef<"Material", 'TermCategory'>
   readonly uploadedAt: Prisma.FieldRef<"Material", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"Material", 'DateTime'>
 }
     
 

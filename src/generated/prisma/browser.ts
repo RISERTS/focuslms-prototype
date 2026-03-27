@@ -62,3 +62,8 @@ export type ActivityLog = Prisma.ActivityLogModel
  * 
  */
 export type QuizAnswer = Prisma.QuizAnswerModel
+/**
+ * Model PasswordResetOtp
+ * 
+ */
+export type PasswordResetOtp = Prisma.PasswordResetOtpModel

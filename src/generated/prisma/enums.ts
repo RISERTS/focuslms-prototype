@@ -9,6 +9,15 @@
 * 🟢 You can import this file directly.
 */
 
+export const MaterialType = {
+  TEXT: 'TEXT',
+  LINK: 'LINK',
+  FILE: 'FILE'
+} as const
+
+export type MaterialType = (typeof MaterialType)[keyof typeof MaterialType]
+
+
 export const UserRole = {
   STUDENT: 'STUDENT',
   INSTRUCTOR: 'INSTRUCTOR'

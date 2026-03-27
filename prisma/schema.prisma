@@ -12,6 +12,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum MaterialType {
+  TEXT
+  LINK
+  FILE
+}
+
 enum UserRole {
   STUDENT
   INSTRUCTOR
@@ -61,12 +67,13 @@ enum TermCategory {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         UserRole
-  createdAt    DateTime @default(now())
+  id                String             @id @default(cuid())
+  name              String
+  email             String             @unique
+  passwordHash      String
+  role              UserRole
+  createdAt         DateTime           @default(now())
+  passwordResetOtps PasswordResetOtp[]
 
   instructorCourses Course[]      @relation("InstructorCourses")
   enrollments       Enrollment[]
@@ -107,14 +114,18 @@ model Enrollment {
 }
 
 model Material {
-  id         String       @id @default(cuid())
-  courseId   String
-  title      String
-  fileKey    String
-  fileUrl    String
-  fileType   String
-  term       TermCategory @default(PRELIMS)
-  uploadedAt DateTime     @default(now())
+  id               String       @id @default(cuid())
+  courseId         String
+  title            String
+  materialType     MaterialType @default(LINK)
+  contentText      String?
+  fileKey          String?
+  fileUrl          String?
+  fileType         String?
+  originalFileName String?
+  term             TermCategory @default(PRELIMS)
+  uploadedAt       DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   course Course @relation(fields: [courseId], references: [id])
 }
@@ -203,4 +214,21 @@ model QuizAnswer {
 
   attempt  QuizAttempt @relation(fields: [attemptId], references: [id])
   question Question    @relation(fields: [questionId], references: [id])
+}
+
+model PasswordResetOtp {
+  id             String    @id @default(cuid())
+  userId         String
+  codeHash       String
+  expiresAt      DateTime
+  lastSentAt     DateTime  @default(now())
+  failedAttempts Int       @default(0)
+  createdAt      DateTime  @default(now())
+  consumedAt     DateTime?
+  invalidatedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }

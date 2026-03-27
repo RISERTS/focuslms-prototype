@@ -175,6 +175,15 @@ export default function LoginPage() {
                 </button>
               </form>
 
+              <div className="mt-2 flex justify-end">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-medium text-gray-700 underline transition hover:text-black"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <Link
                   href="/register"

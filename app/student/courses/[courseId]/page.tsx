@@ -176,23 +176,39 @@ export default async function StudentCourseDetailPage({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold">{material.title}</p>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Type: {material.fileType}
-                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                        <span className="rounded-full border border-gray-300 px-3 py-1">
+                          {material.materialType}
+                        </span>
+                        <span className="rounded-full border border-gray-300 px-3 py-1">
+                          {termLabel(material.term)}
+                        </span>
+                        {material.fileType && (
+                          <span className="rounded-full border border-gray-300 px-3 py-1">
+                            {material.fileType}
+                          </span>
+                        )}
+                      </div>
                     </div>
-
-                    <span className="rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700">
-                      {termLabel(material.term)}
-                    </span>
                   </div>
 
-                  <TrackedMaterialLink
-                    href={material.fileUrl}
-                    courseId={course.id}
-                    materialId={material.id}
-                  >
-                    Open Material
-                  </TrackedMaterialLink>
+                  {material.materialType === "TEXT" ? (
+                    <TrackedMaterialLink
+                      href={`/student/courses/${course.id}/materials/${material.id}`}
+                      courseId={course.id}
+                      materialId={material.id}
+                    >
+                      Open Text
+                    </TrackedMaterialLink>
+                  ) : material.fileUrl ? (
+                    <TrackedMaterialLink
+                      href={material.fileUrl}
+                      courseId={course.id}
+                      materialId={material.id}
+                    >
+                      Open Material
+                    </TrackedMaterialLink>
+                  ) : null}
                 </div>
               ))
             )}
