@@ -269,7 +269,7 @@ export default function StudentRosterManager({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by student name or email"
-              className="w-full min-w-[280px] rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+              className="w-full min-w-70 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
             />
 
             <button

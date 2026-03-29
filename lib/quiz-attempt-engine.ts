@@ -210,7 +210,7 @@ export function getNextQuestionForAttempt(args: {
     (type) => remainingTypeCounts[type] > 0
   );
 
-  let candidatePool = quiz.questions.filter(
+  const candidatePool = quiz.questions.filter(
     (question) =>
       !answeredSet.has(question.id) &&
       allowedTypes.includes(question.questionType)

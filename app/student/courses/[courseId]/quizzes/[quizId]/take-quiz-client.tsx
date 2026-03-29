@@ -385,7 +385,7 @@ export default function TakeQuizClient({ courseId, quiz }: Props) {
   const interactionLocked = started && mustReturnToFullscreen;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 px-6 py-10 text-gray-900">
+    <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 px-6 py-10 text-gray-900">
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
