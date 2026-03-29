@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import InstructorShell from "@/components/instructor/InstructorShell";
-import GenerateQuestionsForm from "./generate-questions-form";
+import AiQuestionGeneratorForm from "./generator-form";
 
 export default async function GenerateQuestionsPage({
   params,
@@ -31,18 +31,14 @@ export default async function GenerateQuestionsPage({
     },
   });
 
-  if (
-    !quiz ||
-    quiz.courseId !== courseId ||
-    quiz.course.instructorId !== session.userId
-  ) {
+  if (!quiz || quiz.courseId !== courseId || quiz.course.instructorId !== session.userId) {
     redirect("/login");
   }
 
   return (
     <InstructorShell
-      title="Generate Questions with AI"
-      description="Choose the exact number of easy, medium, and hard questions to generate for this quiz."
+      title="AI Question Generator"
+      description="Generate multiple question types at once, with separate easy, medium, and hard counts for each type."
       actions={[
         {
           label: "Back to Quiz",
@@ -51,7 +47,7 @@ export default async function GenerateQuestionsPage({
         },
       ]}
     >
-      <GenerateQuestionsForm
+      <AiQuestionGeneratorForm
         courseId={courseId}
         quizId={quizId}
         quizTitle={quiz.title}

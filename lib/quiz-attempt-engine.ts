@@ -1,4 +1,8 @@
-import { getMixedCompositionCounts, type QuizCompositionMode, type QuizType } from "@/lib/quiz-composition";
+import {
+  getMixedCompositionCounts,
+  type QuizCompositionMode,
+  type QuizType,
+} from "@/lib/quiz-composition";
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
 type QuestionType =
@@ -47,8 +51,6 @@ const QUESTION_TYPE_ORDER: QuestionType[] = [
   "ESSAY",
   "COMPUTATIONAL",
 ];
-
-const DIFFICULTY_ORDER: Difficulty[] = ["EASY", "MEDIUM", "HARD"];
 
 function shuffle<T>(items: T[]) {
   const copy = [...items];
@@ -100,11 +102,13 @@ export function getTotalQuestionsForAttempt(quiz: EngineQuiz) {
 
 function getRemainingTypeCounts(quiz: EngineQuiz, answered: EngineAnswered[]) {
   if (quiz.quizType !== "MIXED") {
+    const remaining = Math.max(0, getSingleTypeTotalCount(quiz) - answered.length);
+
     return {
-      MULTIPLE_CHOICE: quiz.quizType === "MULTIPLE_CHOICE" ? getSingleTypeTotalCount(quiz) - answered.length : 0,
-      IDENTIFICATION: quiz.quizType === "IDENTIFICATION" ? getSingleTypeTotalCount(quiz) - answered.length : 0,
-      ESSAY: quiz.quizType === "ESSAY" ? getSingleTypeTotalCount(quiz) - answered.length : 0,
-      COMPUTATIONAL: quiz.quizType === "COMPUTATIONAL" ? getSingleTypeTotalCount(quiz) - answered.length : 0,
+      MULTIPLE_CHOICE: quiz.quizType === "MULTIPLE_CHOICE" ? remaining : 0,
+      IDENTIFICATION: quiz.quizType === "IDENTIFICATION" ? remaining : 0,
+      ESSAY: quiz.quizType === "ESSAY" ? remaining : 0,
+      COMPUTATIONAL: quiz.quizType === "COMPUTATIONAL" ? remaining : 0,
     };
   }
 
@@ -134,41 +138,78 @@ function getRemainingTypeCounts(quiz: EngineQuiz, answered: EngineAnswered[]) {
   }
 
   return {
-    MULTIPLE_CHOICE: Math.max(0, targetCounts.MULTIPLE_CHOICE - answeredByType.MULTIPLE_CHOICE),
-    IDENTIFICATION: Math.max(0, targetCounts.IDENTIFICATION - answeredByType.IDENTIFICATION),
+    MULTIPLE_CHOICE: Math.max(
+      0,
+      targetCounts.MULTIPLE_CHOICE - answeredByType.MULTIPLE_CHOICE
+    ),
+    IDENTIFICATION: Math.max(
+      0,
+      targetCounts.IDENTIFICATION - answeredByType.IDENTIFICATION
+    ),
     ESSAY: Math.max(0, targetCounts.ESSAY - answeredByType.ESSAY),
-    COMPUTATIONAL: Math.max(0, targetCounts.COMPUTATIONAL - answeredByType.COMPUTATIONAL),
+    COMPUTATIONAL: Math.max(
+      0,
+      targetCounts.COMPUTATIONAL - answeredByType.COMPUTATIONAL
+    ),
   };
 }
 
-function getNextAdaptiveDifficulty(lastAnswer: EngineAnswered | null): Difficulty {
+/**
+ * RULE-BASED ADAPTIVE ASSESSMENT LOGIC
+ *
+ * Correct + within threshold -> move up
+ * Incorrect or slow -> move down
+ * No previous answer -> start around MEDIUM
+ * Manual essay -> keep current difficulty
+ *
+ * The returned array is the search priority for the next question difficulty.
+ */
+function getAdaptiveDifficultySearchOrder(
+  lastAnswer: EngineAnswered | null
+): Difficulty[] {
   if (!lastAnswer) {
-    return "MEDIUM";
+    return ["MEDIUM", "EASY", "HARD"];
   }
+
+  const current = lastAnswer.question.difficulty;
 
   const isManualEssay =
     lastAnswer.question.questionType === "ESSAY" &&
     lastAnswer.question.correctAnswer === null;
 
   if (isManualEssay) {
-    return lastAnswer.question.difficulty;
+    if (current === "EASY") return ["EASY", "MEDIUM", "HARD"];
+    if (current === "MEDIUM") return ["MEDIUM", "EASY", "HARD"];
+    return ["HARD", "MEDIUM", "EASY"];
   }
 
-  const currentIndex = DIFFICULTY_ORDER.indexOf(lastAnswer.question.difficulty);
   const isFastEnough =
     lastAnswer.responseTimeSeconds <= lastAnswer.question.timeThresholdSeconds;
 
-  if (lastAnswer.isCorrect && isFastEnough) {
-    return DIFFICULTY_ORDER[Math.min(currentIndex + 1, DIFFICULTY_ORDER.length - 1)];
+  const shouldMoveUp = lastAnswer.isCorrect && isFastEnough;
+
+  if (shouldMoveUp) {
+    if (current === "EASY") {
+      return ["MEDIUM", "HARD", "EASY"];
+    }
+
+    if (current === "MEDIUM") {
+      return ["HARD", "MEDIUM", "EASY"];
+    }
+
+    return ["HARD", "MEDIUM", "EASY"];
   }
 
-  return DIFFICULTY_ORDER[Math.max(currentIndex - 1, 0)];
-}
+  // Wrong or slow: explicitly search downward first.
+  if (current === "HARD") {
+    return ["MEDIUM", "EASY", "HARD"];
+  }
 
-function getDifficultyFallbackOrder(target: Difficulty): Difficulty[] {
-  if (target === "EASY") return ["EASY", "MEDIUM", "HARD"];
-  if (target === "MEDIUM") return ["MEDIUM", "EASY", "HARD"];
-  return ["HARD", "MEDIUM", "EASY"];
+  if (current === "MEDIUM") {
+    return ["EASY", "MEDIUM", "HARD"];
+  }
+
+  return ["EASY", "MEDIUM", "HARD"];
 }
 
 function pickFromPool(
@@ -225,8 +266,7 @@ export function getNextQuestionForAttempt(args: {
   }
 
   const lastAnswer = answered.length > 0 ? answered[answered.length - 1] : null;
-  const targetDifficulty = getNextAdaptiveDifficulty(lastAnswer);
-  const difficultyOrder = getDifficultyFallbackOrder(targetDifficulty);
+  const difficultyOrder = getAdaptiveDifficultySearchOrder(lastAnswer);
 
   for (const difficulty of difficultyOrder) {
     const difficultyPool = candidatePool.filter(

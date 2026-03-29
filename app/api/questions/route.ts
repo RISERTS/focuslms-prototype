@@ -63,6 +63,16 @@ export async function POST(req: Request) {
       );
     }
 
+    if (questionType === "ESSAY") {
+      return NextResponse.json(
+        {
+          error:
+            "Essay questions are hidden from user access because they are not included in the rule-based adaptive assessment flow.",
+        },
+        { status: 400 }
+      );
+    }
+
     if (
       questionType === "MULTIPLE_CHOICE" &&
       (!optionA?.trim() ||
@@ -76,10 +86,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (
-      questionType !== "ESSAY" &&
-      (!correctAnswer || !correctAnswer.trim())
-    ) {
+    if (!correctAnswer?.trim()) {
       return NextResponse.json(
         { error: "Correct answer is required for this question type." },
         { status: 400 }
@@ -107,12 +114,11 @@ export async function POST(req: Request) {
         quizId,
         questionText: questionText.trim(),
         questionType,
-        optionA: optionA?.trim() || null,
-        optionB: optionB?.trim() || null,
-        optionC: optionC?.trim() || null,
-        optionD: optionD?.trim() || null,
-        correctAnswer:
-            questionType === "ESSAY" ? "" : correctAnswer?.trim() || "",
+        optionA: questionType === "MULTIPLE_CHOICE" ? optionA?.trim() || null : null,
+        optionB: questionType === "MULTIPLE_CHOICE" ? optionB?.trim() || null : null,
+        optionC: questionType === "MULTIPLE_CHOICE" ? optionC?.trim() || null : null,
+        optionD: questionType === "MULTIPLE_CHOICE" ? optionD?.trim() || null : null,
+        correctAnswer: correctAnswer.trim(),
         difficulty,
         timeThresholdSeconds: Number(timeThresholdSeconds),
       },

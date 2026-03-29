@@ -1,35 +1,46 @@
-function clamp(value: number, min = 0, max = 1): number {
-  return Math.max(min, Math.min(max, value));
+export type BeiResult = {
+  normalizedTimeOnTask: number;
+  normalizedCompletionRate: number;
+  normalizedInteractionFrequency: number;
+  bei: number;
+  beiPercent: number;
+};
+
+function clamp01(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(1, value));
 }
 
-function normalizeByMax(value: number, maxValue: number): number {
-  if (maxValue <= 0) return 0;
-  return clamp(value / maxValue);
-}
-
-export function computeBEI(params: {
+export function computeBei(args: {
   timeOnTaskSeconds: number;
-  maxTimeOnTaskSeconds: number;
   completionRate: number;
   interactionCount: number;
+  maxTimeOnTaskSeconds: number;
   maxInteractionCount: number;
-}) {
-  const nt = normalizeByMax(
-    params.timeOnTaskSeconds,
-    params.maxTimeOnTaskSeconds
-  );
-  const ncr = clamp(params.completionRate);
-  const nif = normalizeByMax(
-    params.interactionCount,
-    params.maxInteractionCount
-  );
+}): BeiResult {
+  const normalizedTimeOnTask =
+    args.maxTimeOnTaskSeconds > 0
+      ? clamp01(args.timeOnTaskSeconds / args.maxTimeOnTaskSeconds)
+      : 0;
 
-  const bei = (nt + ncr + nif) / 3;
+  const normalizedCompletionRate = clamp01(args.completionRate);
+
+  const normalizedInteractionFrequency =
+    args.maxInteractionCount > 0
+      ? clamp01(args.interactionCount / args.maxInteractionCount)
+      : 0;
+
+  const bei =
+    (normalizedTimeOnTask +
+      normalizedCompletionRate +
+      normalizedInteractionFrequency) /
+    3;
 
   return {
-    nt,
-    ncr,
-    nif,
+    normalizedTimeOnTask,
+    normalizedCompletionRate,
+    normalizedInteractionFrequency,
     bei,
+    beiPercent: Number((bei * 100).toFixed(2)),
   };
 }
