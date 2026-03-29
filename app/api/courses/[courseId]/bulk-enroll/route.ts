@@ -16,14 +16,16 @@ export async function POST(
     const { courseId } = await params;
 
     const body = (await req.json()) as {
-      email?: string;
+      studentIds?: string[];
     };
 
-    const email = String(body.email || "").trim().toLowerCase();
+    const studentIds = Array.isArray(body.studentIds)
+      ? [...new Set(body.studentIds.map((id) => String(id).trim()).filter(Boolean))]
+      : [];
 
-    if (!email) {
+    if (studentIds.length === 0) {
       return NextResponse.json(
-        { error: "Student email is required." },
+        { error: "Please select at least one student." },
         { status: 400 }
       );
     }
@@ -46,46 +48,54 @@ export async function POST(
       );
     }
 
-    const student = await prisma.user.findUnique({
-      where: { email },
+    const validStudents = await prisma.user.findMany({
+      where: {
+        id: {
+          in: studentIds,
+        },
+        role: "STUDENT",
+      },
       select: {
         id: true,
-        role: true,
-        name: true,
       },
     });
 
-    if (!student || student.role !== "STUDENT") {
+    if (validStudents.length === 0) {
       return NextResponse.json(
-        { error: "No student account found with that email." },
-        { status: 404 }
+        { error: "No valid students were selected." },
+        { status: 400 }
       );
     }
 
-    await prisma.enrollment.upsert({
-      where: {
-        userId_courseId: {
-          userId: student.id,
-          courseId,
-        },
-      },
-      update: {
-        status: "APPROVED",
-      },
-      create: {
-        userId: student.id,
-        courseId,
-        status: "APPROVED",
-      },
-    });
+    await prisma.$transaction(
+      validStudents.map((student) =>
+        prisma.enrollment.upsert({
+          where: {
+            userId_courseId: {
+              userId: student.id,
+              courseId,
+            },
+          },
+          update: {
+            status: "APPROVED",
+          },
+          create: {
+            userId: student.id,
+            courseId,
+            status: "APPROVED",
+          },
+        })
+      )
+    );
 
     return NextResponse.json({
-      message: `${student.name} has been enrolled successfully.`,
+      message: `${validStudents.length} student(s) enrolled successfully.`,
+      enrolledCount: validStudents.length,
     });
   } catch (error) {
-    console.error("Enroll by email error:", error);
+    console.error("Bulk enroll students error:", error);
     return NextResponse.json(
-      { error: "Failed to enroll student by email." },
+      { error: "Failed to enroll selected students." },
       { status: 500 }
     );
   }

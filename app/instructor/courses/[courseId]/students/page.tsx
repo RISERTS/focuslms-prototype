@@ -22,7 +22,28 @@ export default async function InstructorStudentsPage({
     select: {
       id: true,
       title: true,
+      courseCode: true,
+      program: true,
+      section: true,
       instructorId: true,
+      enrollments: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -30,64 +51,41 @@ export default async function InstructorStudentsPage({
     redirect("/login");
   }
 
-  const [enrollments, availableStudents] = await Promise.all([
-    prisma.enrollment.findMany({
-      where: {
-        courseId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        id: true,
-        status: true,
-        createdAt: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
-    }),
-    prisma.user.findMany({
-      where: {
-        role: "STUDENT",
-        NOT: {
-          enrollments: {
-            some: {
-              courseId,
-              status: "APPROVED",
-            },
-          },
-        },
-      },
-      orderBy: {
-        name: "asc",
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        enrollments: {
-          where: {
-            courseId,
-          },
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
-    }),
-  ]);
+  const allStudents = await prisma.user.findMany({
+    where: {
+      role: "STUDENT",
+    },
+    orderBy: {
+      name: "asc",
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+
+  const enrollmentStatusByStudent = new Map(
+    course.enrollments.map((enrollment) => [enrollment.user.id, enrollment.status])
+  );
+
+  const approved = course.enrollments.filter(
+    (enrollment) => enrollment.status === "APPROVED"
+  );
+
+  const pending = course.enrollments.filter(
+    (enrollment) => enrollment.status === "PENDING"
+  );
+
+  const available = allStudents.filter((student) => {
+    const status = enrollmentStatusByStudent.get(student.id);
+    return status !== "APPROVED" && status !== "PENDING";
+  });
 
   return (
     <InstructorShell
-      title={`${course.title} Students`}
-      description="Approve student requests, directly enroll students, and remove approved students from this course."
+      title="Student Roster"
+      description="Search students, enroll by email, or bulk enroll selected students from the student list."
       actions={[
         {
           label: "Back to Course",
@@ -98,24 +96,36 @@ export default async function InstructorStudentsPage({
     >
       <StudentRosterManager
         courseId={courseId}
-        courseTitle={course.title}
-        approved={enrollments
-          .filter((e) => e.status === "APPROVED")
-          .map((e) => ({
-            id: e.id,
-            status: e.status,
-            createdAt: e.createdAt.toISOString(),
-            user: e.user,
-          }))}
-        pending={enrollments
-          .filter((e) => e.status === "PENDING")
-          .map((e) => ({
-            id: e.id,
-            status: e.status,
-            createdAt: e.createdAt.toISOString(),
-            user: e.user,
-          }))}
-        availableStudents={availableStudents}
+        courseTitle={
+          course.courseCode ? `${course.courseCode} — ${course.title}` : course.title
+        }
+        approved={approved.map((enrollment) => ({
+          id: enrollment.id,
+          status: String(enrollment.status),
+          createdAt: enrollment.createdAt.toISOString(),
+          user: {
+            id: enrollment.user.id,
+            name: enrollment.user.name,
+            email: enrollment.user.email,
+            role: String(enrollment.user.role),
+          },
+        }))}
+        pending={pending.map((enrollment) => ({
+          id: enrollment.id,
+          status: String(enrollment.status),
+          createdAt: enrollment.createdAt.toISOString(),
+          user: {
+            id: enrollment.user.id,
+            name: enrollment.user.name,
+            email: enrollment.user.email,
+            role: String(enrollment.user.role),
+          },
+        }))}
+        available={available.map((student) => ({
+          id: student.id,
+          name: student.name,
+          email: student.email,
+        }))}
       />
     </InstructorShell>
   );
