@@ -85,3 +85,12 @@ export const TermCategory = {
 } as const
 
 export type TermCategory = (typeof TermCategory)[keyof typeof TermCategory]
+
+
+export const QuizCompositionMode = {
+  NONE: 'NONE',
+  PERCENTAGE: 'PERCENTAGE',
+  COUNT: 'COUNT'
+} as const
+
+export type QuizCompositionMode = (typeof QuizCompositionMode)[keyof typeof QuizCompositionMode]

@@ -1,480 +1,604 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-type OriginalOptionKey = "A" | "B" | "C" | "D";
-type QuestionType =
-  | "MULTIPLE_CHOICE"
-  | "IDENTIFICATION"
-  | "ESSAY"
-  | "COMPUTATIONAL";
-type QuizType =
-  | "MULTIPLE_CHOICE"
-  | "IDENTIFICATION"
-  | "ESSAY"
-  | "COMPUTATIONAL"
-  | "MIXED";
-
-type QuizQuestion = {
+type CurrentQuestion = {
   id: string;
   questionText: string;
-  questionType: QuestionType;
-  optionA: string | null;
-  optionB: string | null;
-  optionC: string | null;
-  optionD: string | null;
+  questionType: "MULTIPLE_CHOICE" | "IDENTIFICATION" | "ESSAY" | "COMPUTATIONAL";
+  difficulty: "EASY" | "MEDIUM" | "HARD";
+  timeThresholdSeconds: number;
+  options: { key: string; text: string }[];
 };
 
-type QuizData = {
+type QuizMeta = {
   id: string;
   title: string;
   description: string | null;
-  shuffleOptions: boolean;
-  quizType: QuizType;
   attemptTimeLimitMinutes: number | null;
   opensAt: string | null;
   closesAt: string | null;
-  questions: QuizQuestion[];
+};
+
+type StartAttemptResponse = {
+  error?: string;
+  finished?: boolean;
+  attemptId?: string;
+  redirectTo?: string;
+  quiz?: {
+    id: string;
+    title: string;
+    description: string | null;
+  };
+  question?: CurrentQuestion;
+  progress?: {
+    answeredCount: number;
+    currentNumber: number;
+    totalQuestions: number;
+  };
+  remainingTimeSeconds?: number | null;
+};
+
+type AnswerResponse = {
+  error?: string;
+  finished?: boolean;
+  attemptId?: string;
+  redirectTo?: string;
+  question?: CurrentQuestion;
+  progress?: {
+    answeredCount: number;
+    currentNumber: number;
+    totalQuestions: number;
+  };
+  remainingTimeSeconds?: number | null;
 };
 
 type Props = {
   courseId: string;
-  quiz: QuizData;
+  quiz: QuizMeta;
 };
 
-type ShuffledChoice = {
-  originalKey: OriginalOptionKey;
-  text: string;
-};
-
-type AnswerValue = string;
-
-function shuffleArray<T>(items: T[]): T[] {
-  const arr = [...items];
-
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-
-  return arr;
-}
-
-function formatSeconds(total: number) {
-  const minutes = Math.floor(total / 60);
-  const seconds = total % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+function formatSeconds(totalSeconds: number) {
+  const safe = Math.max(0, totalSeconds);
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 export default function TakeQuizClient({ courseId, quiz }: Props) {
   const router = useRouter();
-  const startTimeRef = useRef<number | null>(null);
-  const submitStartedRef = useRef(false);
 
-  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [started, setStarted] = useState(false);
-  const [violations, setViolations] = useState(0);
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<CurrentQuestion | null>(null);
+  const [currentAnswer, setCurrentAnswer] = useState("");
+  const [currentNumber, setCurrentNumber] = useState(0);
+  const [answeredCount, setAnsweredCount] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [remainingTimeSeconds, setRemainingTimeSeconds] = useState<number | null>(
     quiz.attemptTimeLimitMinutes ? quiz.attemptTimeLimitMinutes * 60 : null
   );
 
-  const renderedQuestions = useMemo(() => {
-    return quiz.questions.map((q) => {
-      const choices: ShuffledChoice[] =
-        q.questionType === "MULTIPLE_CHOICE"
-          ? [
-              { originalKey: "A", text: q.optionA ?? "" },
-              { originalKey: "B", text: q.optionB ?? "" },
-              { originalKey: "C", text: q.optionC ?? "" },
-              { originalKey: "D", text: q.optionD ?? "" },
-            ]
-          : [];
+  const [started, setStarted] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-      return {
-        ...q,
-        renderedChoices:
-          q.questionType === "MULTIPLE_CHOICE" && quiz.shuffleOptions
-            ? shuffleArray(choices)
-            : choices,
-      };
-    });
-  }, [quiz]);
+  const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
+  const [fullscreenAccepted, setFullscreenAccepted] = useState(false);
+  const [mustReturnToFullscreen, setMustReturnToFullscreen] = useState(false);
+  const [visibilityViolations, setVisibilityViolations] = useState(0);
 
-  const answersRef = useRef<Record<string, AnswerValue>>({});
-  const renderedQuestionsRef = useRef(renderedQuestions);
+  const questionStartedAtRef = useRef<number>(0);
+  const autoSubmittedRef = useRef(false);
+  const lastViolationAtRef = useRef(0);
+  const violationCountRef = useRef(0);
 
-  useEffect(() => {
-    answersRef.current = answers;
-  }, [answers]);
+  const finishViaRedirect = useCallback(
+    (redirectTo: string) => {
+      router.replace(redirectTo);
+      router.refresh();
+    },
+    [router]
+  );
 
-  useEffect(() => {
-    renderedQuestionsRef.current = renderedQuestions;
-  }, [renderedQuestions]);
+  const answerCurrentQuestion = useCallback(
+    async (forceFinish = false) => {
+      if (!attemptId || !currentQuestion) return;
+      if (submitting) return;
+      if (!forceFinish && mustReturnToFullscreen) {
+        setError("Return to fullscreen before continuing.");
+        return;
+      }
+      if (forceFinish && autoSubmittedRef.current) return;
 
-  function choose(questionId: string, value: string) {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }));
-  }
+      if (forceFinish) {
+        autoSubmittedRef.current = true;
+      }
 
-  function isAnswered(question: QuizQuestion): boolean {
-    const value = answers[question.id];
-
-    if (question.questionType === "MULTIPLE_CHOICE") {
-      return value === "A" || value === "B" || value === "C" || value === "D";
-    }
-
-    return typeof value === "string" && value.trim().length > 0;
-  }
-
-  async function startQuiz() {
-    setError("");
-
-    if (!document.fullscreenEnabled) {
-      setError("Fullscreen is required, but this browser does not allow it here.");
-      return;
-    }
-
-    try {
-      await document.documentElement.requestFullscreen();
-      startTimeRef.current = Date.now();
-      submitStartedRef.current = false;
-      setViolations(0);
-      setStarted(true);
-
-      await fetch("/api/activity-log", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          actionType: "START_QUIZ",
-          courseId,
-          targetId: quiz.id,
-        }),
-      });
-    } catch (err) {
-      console.error("Start quiz fullscreen error:", err);
-      setError("You must allow fullscreen to start this quiz.");
-    }
-  }
-
-  const submitQuiz = useCallback(
-    async (autoFillMissing: boolean) => {
-      if (submitStartedRef.current) return;
-      submitStartedRef.current = true;
-
-      setLoading(true);
+      setSubmitting(true);
       setError("");
 
-      const currentAnswers = answersRef.current;
-      const currentQuestions = renderedQuestionsRef.current;
-
-      const startedAt = startTimeRef.current ?? Date.now();
-      const elapsedSeconds = Math.max(
-        1,
-        Math.floor((Date.now() - startedAt) / 1000)
+      const responseTimeSeconds = Math.max(
+        0,
+        Math.floor((Date.now() - questionStartedAtRef.current) / 1000)
       );
-
-      const avgPerQuestion = Math.max(
-        1,
-        Math.floor(elapsedSeconds / Math.max(1, currentQuestions.length))
-      );
-
-      const payloadAnswers = currentQuestions.map((q) => ({
-        questionId: q.id,
-        selectedAnswer: autoFillMissing
-          ? currentAnswers[q.id] ?? ""
-          : currentAnswers[q.id],
-        responseTimeSeconds: avgPerQuestion,
-      }));
 
       try {
-        const res = await fetch("/api/quiz-submit", {
+        const res = await fetch(`/api/quiz-attempts/${attemptId}/answer`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            quizId: quiz.id,
-            totalElapsedSeconds: elapsedSeconds,
-            answers: payloadAnswers,
+            questionId: currentQuestion.id,
+            selectedAnswer: currentAnswer,
+            responseTimeSeconds,
+            forceFinish,
           }),
         });
 
         const text = await res.text();
-        const data = text
-          ? (JSON.parse(text) as { error?: string; score?: number })
-          : {};
+        const data = text ? (JSON.parse(text) as AnswerResponse) : {};
 
         if (!res.ok) {
-          setLoading(false);
-          submitStartedRef.current = false;
-          setError(data.error || "Failed to submit quiz.");
+          setSubmitting(false);
+          setError(data.error || "Failed to submit your answer.");
+          autoSubmittedRef.current = false;
           return;
         }
 
-        if (document.fullscreenElement) {
-          await document.exitFullscreen().catch(() => undefined);
+        if (data.finished) {
+          finishViaRedirect(
+            data.redirectTo ??
+              `/student/courses/${courseId}/quizzes/${quiz.id}/review?attemptId=${attemptId}`
+          );
+          return;
         }
 
-        setLoading(false);
-        alert(
-          typeof data.score === "number"
-            ? `Quiz submitted. Score: ${data.score.toFixed(2)}`
-            : "Quiz submitted successfully."
-        );
-        router.push(`/student/courses/${courseId}`);
-        router.refresh();
+        if (!data.question || !data.progress) {
+          setSubmitting(false);
+          setError("The next question could not be loaded.");
+          autoSubmittedRef.current = false;
+          return;
+        }
+
+        setCurrentQuestion(data.question);
+        setCurrentAnswer("");
+        setAnsweredCount(data.progress.answeredCount);
+        setCurrentNumber(data.progress.currentNumber);
+        setTotalQuestions(data.progress.totalQuestions);
+        setRemainingTimeSeconds(data.remainingTimeSeconds ?? null);
+        questionStartedAtRef.current = Date.now();
+
+        setSubmitting(false);
       } catch (err) {
-        console.error("Submit quiz error:", err);
-        setLoading(false);
-        submitStartedRef.current = false;
-        setError("Something went wrong while submitting the quiz.");
+        console.error("Answer current question UI error:", err);
+        setSubmitting(false);
+        setError("Something went wrong while sending your answer.");
+        autoSubmittedRef.current = false;
       }
     },
-    [courseId, quiz.id, router]
+    [
+      attemptId,
+      courseId,
+      currentAnswer,
+      currentQuestion,
+      finishViaRedirect,
+      mustReturnToFullscreen,
+      quiz.id,
+      submitting,
+    ]
   );
 
-  async function handleSubmit() {
-    setError("");
+  const registerViolation = useCallback(
+    (reason: string) => {
+      if (!started || submitting) return;
 
-    const unanswered = renderedQuestions.some((q) => !isAnswered(q));
-    if (unanswered) {
-      setError("Please answer all questions.");
-      return;
-    }
+      const now = Date.now();
+      if (now - lastViolationAtRef.current < 1200) {
+        return;
+      }
 
-    await submitQuiz(false);
-  }
+      lastViolationAtRef.current = now;
+      violationCountRef.current += 1;
+
+      const nextCount = violationCountRef.current;
+
+      setVisibilityViolations(nextCount);
+      setMustReturnToFullscreen(true);
+      setFullscreenAccepted(Boolean(document.fullscreenElement));
+
+      if (nextCount >= 3) {
+        setWarning(
+          "Maximum violations reached. Your quiz is being submitted automatically."
+        );
+
+        window.setTimeout(() => {
+          void answerCurrentQuestion(true);
+        }, 0);
+      } else {
+        setWarning(
+          `${reason} detected. Return to fullscreen to continue. Violation ${nextCount}/3.`
+        );
+      }
+    },
+    [answerCurrentQuestion, started, submitting]
+  );
 
   useEffect(() => {
-    if (!started) return;
-
-    const onFullscreenChange = () => {
-      if (!document.fullscreenElement) {
-        setViolations((prev) => prev + 1);
-        setError("Do not exit fullscreen during the quiz.");
-      }
-    };
-
-    const onVisibilityChange = () => {
-      if (document.hidden) {
-        setViolations((prev) => prev + 1);
-        setError("Do not switch tabs or hide the quiz page.");
-      }
-    };
-
-    const onBlur = () => {
-      setViolations((prev) => prev + 1);
-      setError("Do not leave the quiz window during the attempt.");
-    };
-
-    const onContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-    };
-
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("blur", onBlur);
-    document.addEventListener("contextmenu", onContextMenu);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("blur", onBlur);
-      document.removeEventListener("contextmenu", onContextMenu);
-    };
-  }, [started]);
-
-  useEffect(() => {
-    if (!started || timeLeftSeconds === null) return;
-    if (submitStartedRef.current) return;
-
-    if (timeLeftSeconds <= 0) {
-      const timeout = window.setTimeout(() => {
-        if (!submitStartedRef.current) {
-          void submitQuiz(true);
-        }
-      }, 0);
-
-      return () => window.clearTimeout(timeout);
-    }
+    if (!started || remainingTimeSeconds === null || submitting) return;
 
     const timer = window.setInterval(() => {
-      setTimeLeftSeconds((prev) => (prev === null ? null : prev - 1));
+      setRemainingTimeSeconds((prev) => {
+        if (prev === null) return null;
+        return prev > 0 ? prev - 1 : 0;
+      });
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [started, submitQuiz, timeLeftSeconds]);
+  }, [started, remainingTimeSeconds, submitting]);
+
+  useEffect(() => {
+    if (!started || remainingTimeSeconds === null || submitting) return;
+    if (remainingTimeSeconds > 0) return;
+
+    const timer = window.setTimeout(() => {
+      void answerCurrentQuestion(true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [started, remainingTimeSeconds, submitting, answerCurrentQuestion]);
 
   useEffect(() => {
     if (!started) return;
-    if (submitStartedRef.current) return;
 
-    if (violations >= 3) {
-      const timeout = window.setTimeout(() => {
-        if (!submitStartedRef.current) {
-          void submitQuiz(true);
-        }
-      }, 0);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        registerViolation("Tab/app switch");
+      }
+    };
 
-      return () => window.clearTimeout(timeout);
+    const handleWindowBlur = () => {
+      registerViolation("Focus loss");
+    };
+
+    const handlePageHide = () => {
+      registerViolation("Page hide");
+    };
+
+    const handleFullscreenChange = () => {
+      const isFullscreen = Boolean(document.fullscreenElement);
+
+      setFullscreenAccepted(isFullscreen);
+
+      if (!isFullscreen) {
+        registerViolation("Fullscreen exit");
+      } else {
+        setMustReturnToFullscreen(false);
+        setWarning((prev) =>
+          prev.includes("Violation") || prev.includes("fullscreen") ? "" : prev
+        );
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    window.addEventListener("blur", handleWindowBlur);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      window.removeEventListener("blur", handleWindowBlur);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [registerViolation, started]);
+
+  async function requestFullscreenAgain() {
+    setError("");
+
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+
+      setFullscreenAccepted(true);
+      setMustReturnToFullscreen(false);
+      setWarning("");
+    } catch (err) {
+      console.error("Return to fullscreen error:", err);
+      setError("Unable to enter fullscreen. Please allow fullscreen to continue.");
     }
-  }, [violations, started, submitQuiz]);
-
-  function renderQuestionInput(question: (typeof renderedQuestions)[number]) {
-    if (question.questionType === "MULTIPLE_CHOICE") {
-      return (
-        <div className="mt-4 space-y-3">
-          {question.renderedChoices.map((choice, choiceIndex) => {
-            const visualLabel = ["A", "B", "C", "D"][choiceIndex];
-
-            return (
-              <label
-                key={`${question.id}-${choice.originalKey}`}
-                className="flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 transition hover:bg-gray-50"
-              >
-                <input
-                  type="radio"
-                  name={question.id}
-                  value={choice.originalKey}
-                  checked={answers[question.id] === choice.originalKey}
-                  onChange={() => choose(question.id, choice.originalKey)}
-                  className="mt-1"
-                />
-                <span className="text-sm text-gray-700">
-                  <span className="font-semibold text-gray-900">
-                    {visualLabel}.
-                  </span>{" "}
-                  {choice.text}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      );
-    }
-
-    if (question.questionType === "ESSAY") {
-      return (
-        <textarea
-          className="mt-4 w-full rounded-2xl border border-gray-300 bg-white p-4 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
-          rows={6}
-          placeholder="Write your answer here..."
-          value={answers[question.id] ?? ""}
-          onChange={(e) => choose(question.id, e.target.value)}
-        />
-      );
-    }
-
-    return (
-      <input
-        className="mt-4 w-full rounded-2xl border border-gray-300 bg-white p-4 text-sm text-gray-900 placeholder:text-gray-400 caret-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
-        type="text"
-        placeholder={
-          question.questionType === "COMPUTATIONAL"
-            ? "Enter your computed answer"
-            : "Enter your answer"
-        }
-        value={answers[question.id] ?? ""}
-        onChange={(e) => choose(question.id, e.target.value)}
-      />
-    );
   }
 
-  if (!started) {
-    return (
-      <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 p-8 text-gray-900">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
-            Quiz Start
-          </p>
-          <h1 className="mt-4 text-3xl font-bold">{quiz.title}</h1>
-          <p className="mt-2 text-sm leading-7 text-gray-600">
-            {quiz.description || "No description"}
-          </p>
+  async function startOrResumeQuiz() {
+    setError("");
+    setWarning("");
+    setStarting(true);
 
-          <div className="mt-6 space-y-3 rounded-2xl bg-gray-50 p-5 text-sm text-gray-700">
-            <p className="font-semibold text-gray-900">Quiz Rules</p>
-            {quiz.opensAt && <p>Opens: {new Date(quiz.opensAt).toLocaleString()}</p>}
-            {quiz.closesAt && <p>Closes: {new Date(quiz.closesAt).toLocaleString()}</p>}
-            {quiz.attemptTimeLimitMinutes && (
-              <p>Attempt time limit: {quiz.attemptTimeLimitMinutes} minute(s)</p>
-            )}
-            <p>Fullscreen is required to start.</p>
-            <p>Switching tabs, leaving fullscreen, or leaving the quiz window increases your violation count.</p>
-            <p>At 3 violations, the quiz is auto-submitted.</p>
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+
+      const res = await fetch("/api/quiz-attempts/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quizId: quiz.id,
+        }),
+      });
+
+      const text = await res.text();
+      const data = text ? (JSON.parse(text) as StartAttemptResponse) : {};
+
+      if (!res.ok) {
+        setStarting(false);
+        setError(data.error || "Failed to start the quiz.");
+        return;
+      }
+
+      if (data.finished) {
+        finishViaRedirect(
+          data.redirectTo ??
+            `/student/courses/${courseId}/quizzes/${quiz.id}/review`
+        );
+        return;
+      }
+
+      if (!data.attemptId || !data.question || !data.progress) {
+        setStarting(false);
+        setError("The quiz attempt could not be started.");
+        return;
+      }
+
+      setAttemptId(data.attemptId);
+      setCurrentQuestion(data.question);
+      setCurrentAnswer("");
+      setAnsweredCount(data.progress.answeredCount);
+      setCurrentNumber(data.progress.currentNumber);
+      setTotalQuestions(data.progress.totalQuestions);
+      setRemainingTimeSeconds(data.remainingTimeSeconds ?? null);
+      setStarted(true);
+      setFullscreenAccepted(true);
+      setMustReturnToFullscreen(false);
+      questionStartedAtRef.current = Date.now();
+
+      setStarting(false);
+    } catch (err) {
+      console.error("Start quiz error:", err);
+      setStarting(false);
+      setError("Please allow fullscreen mode before starting the quiz.");
+    }
+  }
+
+  const interactionLocked = started && mustReturnToFullscreen;
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 px-6 py-10 text-gray-900">
+      <div className="mx-auto max-w-5xl space-y-6">
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
+                Quiz
+              </p>
+              <h1 className="mt-3 text-3xl font-bold">{quiz.title}</h1>
+              {quiz.description && (
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-600">
+                  {quiz.description}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
+                  Progress
+                </p>
+                <p className="mt-1 font-semibold text-gray-900">
+                  {answeredCount} / {totalQuestions || "?"} answered
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
+                  Time Left
+                </p>
+                <p className="mt-1 font-semibold text-gray-900">
+                  {remainingTimeSeconds === null
+                    ? "No limit"
+                    : formatSeconds(remainingTimeSeconds)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
+                  Fullscreen
+                </p>
+                <p className="mt-1 font-semibold text-gray-900">
+                  {fullscreenAccepted ? "Active" : "Required"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
+                  Violations
+                </p>
+                <p className="mt-1 font-semibold text-gray-900">
+                  {visibilityViolations} / 3
+                </p>
+              </div>
+            </div>
           </div>
 
-          {error && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
+          {!started && (
+            <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+              <p className="font-semibold text-amber-800">Before you begin</p>
+              <ul className="mt-3 space-y-2 text-sm text-amber-700">
+                <li>• Only the current question will be shown.</li>
+                <li>• The next question is decided by the server after each answer.</li>
+                <li>• Fullscreen is required for this quiz.</li>
+                <li>• Exiting fullscreen or leaving the quiz screen counts as a violation.</li>
+              </ul>
+
+              <button
+                onClick={() => void startOrResumeQuiz()}
+                disabled={starting}
+                className="mt-5 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60"
+              >
+                {starting ? "Preparing Quiz..." : "Start / Resume Quiz"}
+              </button>
             </div>
           )}
 
-          <button
-            onClick={startQuiz}
-            className="mt-6 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
-          >
-            Enter Fullscreen and Start Quiz
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 p-8 text-gray-900">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div>
-            <h1 className="text-2xl font-bold">{quiz.title}</h1>
-            <p className="text-sm text-gray-500">Quiz Type: {quiz.quizType}</p>
-          </div>
-
-          <div className="flex flex-wrap gap-3 text-sm">
-            {timeLeftSeconds !== null && (
-              <span className="rounded-full bg-black px-4 py-2 font-semibold text-white">
-                Time Left: {formatSeconds(Math.max(0, timeLeftSeconds))}
-              </span>
-            )}
-            <span className="rounded-full border border-red-300 px-4 py-2 text-red-700">
-              Violations: {violations}/3
-            </span>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          {renderedQuestions.map((q, index) => (
-            <div
-              key={q.id}
-              className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm"
-            >
-              <p className="font-semibold">
-                {index + 1}. {q.questionText}
+          {interactionLocked && (
+            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5">
+              <p className="font-semibold text-red-800">
+                Fullscreen is required to continue.
               </p>
-              <p className="mt-1 text-sm text-gray-500">Type: {q.questionType}</p>
+              <p className="mt-2 text-sm text-red-700">
+                Answering is locked until you return to fullscreen mode.
+              </p>
 
-              {renderQuestionInput(q)}
+              <button
+                onClick={() => void requestFullscreenAgain()}
+                className="mt-4 rounded-xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+              >
+                Return to Fullscreen
+              </button>
             </div>
-          ))}
+          )}
+
+          {warning && (
+            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              {warning}
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
         </div>
 
-        {error && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+        {started && currentQuestion && (
+          <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.15em] text-gray-500">
+                  Question {currentNumber} of {totalQuestions}
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-full border border-gray-300 px-3 py-1 text-gray-700">
+                    {currentQuestion.questionType}
+                  </span>
+                  <span className="rounded-full border border-gray-300 px-3 py-1 text-gray-700">
+                    {currentQuestion.difficulty}
+                  </span>
+                  <span className="rounded-full border border-gray-300 px-3 py-1 text-gray-700">
+                    {currentQuestion.timeThresholdSeconds}s threshold
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <h2 className="mt-6 text-2xl font-bold leading-relaxed">
+              {currentQuestion.questionText}
+            </h2>
+
+            <div className="mt-6">
+              {currentQuestion.questionType === "MULTIPLE_CHOICE" ? (
+                <div className="space-y-3">
+                  {currentQuestion.options.map((option) => (
+                    <label
+                      key={`${currentQuestion.id}-${option.key}`}
+                      className="flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 transition hover:bg-white"
+                    >
+                      <input
+                        type="radio"
+                        name={`question-${currentQuestion.id}`}
+                        value={option.key}
+                        checked={currentAnswer === option.key}
+                        onChange={(e) => setCurrentAnswer(e.target.value)}
+                        disabled={submitting || interactionLocked}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {option.key}. {option.text}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              ) : currentQuestion.questionType === "ESSAY" ? (
+                <textarea
+                  rows={8}
+                  value={currentAnswer}
+                  onChange={(e) => setCurrentAnswer(e.target.value)}
+                  disabled={submitting || interactionLocked}
+                  className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder="Type your essay answer here..."
+                />
+              ) : (
+                <input
+                  value={currentAnswer}
+                  onChange={(e) => setCurrentAnswer(e.target.value)}
+                  disabled={submitting || interactionLocked}
+                  className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
+                  placeholder={
+                    currentQuestion.questionType === "COMPUTATIONAL"
+                      ? "Enter your final answer"
+                      : "Enter your answer"
+                  }
+                />
+              )}
+            </div>
+
+            <div className="mt-8 flex flex-wrap justify-between gap-3">
+              <button
+                onClick={() => void requestFullscreenAgain()}
+                disabled={!started}
+                className="rounded-xl border border-gray-300 bg-gray-50 px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 disabled:opacity-50"
+              >
+                Fullscreen
+              </button>
+
+              <div className="flex flex-wrap gap-3">
+                {currentNumber < totalQuestions ? (
+                  <button
+                    onClick={() => void answerCurrentQuestion(false)}
+                    disabled={submitting || interactionLocked}
+                    className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    {submitting ? "Saving..." : "Submit Answer & Next"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => void answerCurrentQuestion(true)}
+                    disabled={submitting || interactionLocked}
+                    className="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {submitting ? "Submitting..." : "Submit Quiz"}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="mt-6 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-70"
-        >
-          {loading ? "Submitting..." : "Submit Quiz"}
-        </button>
       </div>
     </main>
   );

@@ -3,6 +3,10 @@
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import InstructorShell from "@/components/instructor/InstructorShell";
+import {
+  getMixedCompositionCounts,
+  type QuizCompositionMode,
+} from "@/lib/quiz-composition";
 
 type ApiErrorResponse = {
   error?: string;
@@ -11,6 +15,12 @@ type ApiErrorResponse = {
 
 type CloseMode = "none" | "specific" | "duration";
 type TermCategory = "PRELIMS" | "MIDTERMS" | "FINALS";
+type QuizType =
+  | "MULTIPLE_CHOICE"
+  | "IDENTIFICATION"
+  | "ESSAY"
+  | "COMPUTATIONAL"
+  | "MIXED";
 
 function toIsoOrNull(value: string) {
   if (!value) return null;
@@ -45,14 +55,30 @@ export default function CreateQuizPage() {
   const [questionsPerAttempt, setQuestionsPerAttempt] = useState<number | "">("");
   const [shuffleOptions, setShuffleOptions] = useState(true);
   const [avoidRepeatedQuestions, setAvoidRepeatedQuestions] = useState(true);
-  const [quizType, setQuizType] = useState("MULTIPLE_CHOICE");
+  const [quizType, setQuizType] = useState<QuizType>("MULTIPLE_CHOICE");
   const [adaptiveMode, setAdaptiveMode] = useState(false);
+
+  const [compositionMode, setCompositionMode] =
+    useState<QuizCompositionMode>("NONE");
+  const [mcqPercentage, setMcqPercentage] = useState<number | "">(0);
+  const [identificationPercentage, setIdentificationPercentage] =
+    useState<number | "">(0);
+  const [essayPercentage, setEssayPercentage] = useState<number | "">(0);
+  const [computationalPercentage, setComputationalPercentage] =
+    useState<number | "">(0);
+
+  const [mcqCount, setMcqCount] = useState<number | "">(0);
+  const [identificationCount, setIdentificationCount] = useState<number | "">(0);
+  const [essayCount, setEssayCount] = useState<number | "">(0);
+  const [computationalCount, setComputationalCount] = useState<number | "">(0);
 
   const [opensAtLocal, setOpensAtLocal] = useState("");
   const [closeMode, setCloseMode] = useState<CloseMode>("none");
   const [closesAtLocal, setClosesAtLocal] = useState("");
-  const [availabilityDurationMinutes, setAvailabilityDurationMinutes] = useState<number | "">("");
-  const [attemptTimeLimitMinutes, setAttemptTimeLimitMinutes] = useState<number | "">("");
+  const [availabilityDurationMinutes, setAvailabilityDurationMinutes] =
+    useState<number | "">("");
+  const [attemptTimeLimitMinutes, setAttemptTimeLimitMinutes] =
+    useState<number | "">("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -79,6 +105,53 @@ export default function CreateQuizPage() {
 
     return "";
   }, [opensAtLocal, closeMode, closesAtLocal, availabilityDurationMinutes]);
+
+  const enteredPercentageTotal = useMemo(() => {
+    return (
+      Number(mcqPercentage || 0) +
+      Number(identificationPercentage || 0) +
+      Number(essayPercentage || 0) +
+      Number(computationalPercentage || 0)
+    );
+  }, [
+    mcqPercentage,
+    identificationPercentage,
+    essayPercentage,
+    computationalPercentage,
+  ]);
+
+  const compositionPreview = useMemo(() => {
+    return getMixedCompositionCounts({
+      quizType,
+      questionsPerAttempt:
+        questionsPerAttempt === "" ? null : Number(questionsPerAttempt),
+      compositionMode,
+      mcqPercentage: mcqPercentage === "" ? null : Number(mcqPercentage),
+      identificationPercentage:
+        identificationPercentage === "" ? null : Number(identificationPercentage),
+      essayPercentage: essayPercentage === "" ? null : Number(essayPercentage),
+      computationalPercentage:
+        computationalPercentage === "" ? null : Number(computationalPercentage),
+      mcqCount: mcqCount === "" ? null : Number(mcqCount),
+      identificationCount:
+        identificationCount === "" ? null : Number(identificationCount),
+      essayCount: essayCount === "" ? null : Number(essayCount),
+      computationalCount:
+        computationalCount === "" ? null : Number(computationalCount),
+    });
+  }, [
+    quizType,
+    questionsPerAttempt,
+    compositionMode,
+    mcqPercentage,
+    identificationPercentage,
+    essayPercentage,
+    computationalPercentage,
+    mcqCount,
+    identificationCount,
+    essayCount,
+    computationalCount,
+  ]);
 
   function buildSchedule() {
     const opensAt = toIsoOrNull(opensAtLocal);
@@ -109,6 +182,57 @@ export default function CreateQuizPage() {
     return { opensAt, closesAt: null as string | null };
   }
 
+  function validateMixedConfiguration() {
+    if (quizType !== "MIXED") return null;
+
+    if (compositionMode !== "PERCENTAGE" && compositionMode !== "COUNT") {
+      return "Mixed quizzes require a composition mode.";
+    }
+
+    if (compositionMode === "PERCENTAGE") {
+      if (questionsPerAttempt === "" || Number(questionsPerAttempt) <= 0) {
+        return "Questions per attempt is required for percentage-based mixed quizzes.";
+      }
+
+      if (enteredPercentageTotal > 100) {
+        return "Mixed quiz percentages cannot exceed 100.";
+      }
+
+      const zeroFields = [
+        Number(mcqPercentage || 0),
+        Number(identificationPercentage || 0),
+        Number(essayPercentage || 0),
+        Number(computationalPercentage || 0),
+      ].filter((value) => value === 0).length;
+
+      if (enteredPercentageTotal < 100 && zeroFields === 0) {
+        return "If total percentage is below 100, leave at least one field at 0% so the remaining items can be auto-distributed.";
+      }
+    }
+
+    if (compositionMode === "COUNT") {
+      const totalCount =
+        Number(mcqCount || 0) +
+        Number(identificationCount || 0) +
+        Number(essayCount || 0) +
+        Number(computationalCount || 0);
+
+      if (totalCount <= 0) {
+        return "At least one per-type count is required for count-based mixed quizzes.";
+      }
+
+      if (
+        questionsPerAttempt !== "" &&
+        Number(questionsPerAttempt) > 0 &&
+        totalCount !== Number(questionsPerAttempt)
+      ) {
+        return "For count-based mixed quizzes, total per-type counts must match questions per attempt.";
+      }
+    }
+
+    return null;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -128,6 +252,13 @@ export default function CreateQuizPage() {
     ) {
       setLoading(false);
       setError("Close date/time must be later than the open date/time.");
+      return;
+    }
+
+    const mixedError = validateMixedConfiguration();
+    if (mixedError) {
+      setLoading(false);
+      setError(mixedError);
       return;
     }
 
@@ -155,6 +286,20 @@ export default function CreateQuizPage() {
           closesAt: schedule.closesAt,
           attemptTimeLimitMinutes:
             attemptTimeLimitMinutes === "" ? null : Number(attemptTimeLimitMinutes),
+
+          compositionMode: quizType === "MIXED" ? compositionMode : "NONE",
+          mcqPercentage: quizType === "MIXED" ? Number(mcqPercentage || 0) : null,
+          identificationPercentage:
+            quizType === "MIXED" ? Number(identificationPercentage || 0) : null,
+          essayPercentage: quizType === "MIXED" ? Number(essayPercentage || 0) : null,
+          computationalPercentage:
+            quizType === "MIXED" ? Number(computationalPercentage || 0) : null,
+          mcqCount: quizType === "MIXED" ? Number(mcqCount || 0) : null,
+          identificationCount:
+            quizType === "MIXED" ? Number(identificationCount || 0) : null,
+          essayCount: quizType === "MIXED" ? Number(essayCount || 0) : null,
+          computationalCount:
+            quizType === "MIXED" ? Number(computationalCount || 0) : null,
         }),
       });
 
@@ -179,7 +324,7 @@ export default function CreateQuizPage() {
   return (
     <InstructorShell
       title="Create Quiz"
-      description="Configure term, attempts, schedule, availability window, and attempt time limit."
+      description="Configure quiz settings, schedule, and mixed-type composition."
       actions={[
         {
           label: "Back to Quizzes",
@@ -237,7 +382,16 @@ export default function CreateQuizPage() {
                 <select
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
                   value={quizType}
-                  onChange={(e) => setQuizType(e.target.value)}
+                  onChange={(e) => {
+                    const nextType = e.target.value as QuizType;
+                    setQuizType(nextType);
+
+                    if (nextType !== "MIXED") {
+                      setCompositionMode("NONE");
+                    } else if (compositionMode === "NONE") {
+                      setCompositionMode("PERCENTAGE");
+                    }
+                  }}
                 >
                   <option value="MULTIPLE_CHOICE">Multiple Choice</option>
                   <option value="IDENTIFICATION">Identification</option>
@@ -296,6 +450,202 @@ export default function CreateQuizPage() {
                 />
               </div>
             </div>
+
+            {quizType === "MIXED" && (
+              <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">
+                  Mixed Quiz Composition
+                </p>
+
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Composition Mode
+                  </label>
+                  <select
+                    value={compositionMode}
+                    onChange={(e) =>
+                      setCompositionMode(e.target.value as QuizCompositionMode)
+                    }
+                    className="w-full rounded-xl border border-indigo-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  >
+                    <option value="PERCENTAGE">Percentage</option>
+                    <option value="COUNT">Count</option>
+                  </select>
+                </div>
+
+                {compositionMode === "PERCENTAGE" && (
+                  <>
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Multiple Choice (%)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={mcqPercentage}
+                          onChange={(e) =>
+                            setMcqPercentage(
+                              e.target.value === "" ? "" : Number(e.target.value)
+                            )
+                          }
+                          className="w-full rounded-xl border border-green-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Identification (%)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={identificationPercentage}
+                          onChange={(e) =>
+                            setIdentificationPercentage(
+                              e.target.value === "" ? "" : Number(e.target.value)
+                            )
+                          }
+                          className="w-full rounded-xl border border-amber-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Essay (%)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={essayPercentage}
+                          onChange={(e) =>
+                            setEssayPercentage(
+                              e.target.value === "" ? "" : Number(e.target.value)
+                            )
+                          }
+                          className="w-full rounded-xl border border-blue-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Computational (%)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={computationalPercentage}
+                          onChange={(e) =>
+                            setComputationalPercentage(
+                              e.target.value === "" ? "" : Number(e.target.value)
+                            )
+                          }
+                          className="w-full rounded-xl border border-red-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl border border-indigo-200 bg-white p-4 text-sm text-gray-700">
+                      <p className="font-semibold text-gray-900">
+                        Percentage Input Summary
+                      </p>
+                      <p className="mt-2">
+                        Entered total: {enteredPercentageTotal}%
+                      </p>
+                      <p className="mt-1">
+                        Any field left at 0% will receive a fair share of the remaining items.
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {compositionMode === "COUNT" && (
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                        Multiple Choice Count
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={mcqCount}
+                        onChange={(e) =>
+                          setMcqCount(
+                            e.target.value === "" ? "" : Number(e.target.value)
+                          )
+                        }
+                        className="w-full rounded-xl border border-green-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                        Identification Count
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={identificationCount}
+                        onChange={(e) =>
+                          setIdentificationCount(
+                            e.target.value === "" ? "" : Number(e.target.value)
+                          )
+                        }
+                        className="w-full rounded-xl border border-amber-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                        Essay Count
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={essayCount}
+                        onChange={(e) =>
+                          setEssayCount(
+                            e.target.value === "" ? "" : Number(e.target.value)
+                          )
+                        }
+                        className="w-full rounded-xl border border-blue-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                        Computational Count
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={computationalCount}
+                        onChange={(e) =>
+                          setComputationalCount(
+                            e.target.value === "" ? "" : Number(e.target.value)
+                          )
+                        }
+                        className="w-full rounded-xl border border-red-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 rounded-2xl border border-indigo-200 bg-white p-4 text-sm text-gray-700">
+                  <p className="font-semibold text-gray-900">Preview per attempt</p>
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    <p>Multiple Choice: {compositionPreview.MULTIPLE_CHOICE}</p>
+                    <p>Identification: {compositionPreview.IDENTIFICATION}</p>
+                    <p>Essay: {compositionPreview.ESSAY}</p>
+                    <p>Computational: {compositionPreview.COMPUTATIONAL}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
@@ -451,16 +801,27 @@ export default function CreateQuizPage() {
 
           <div className="mt-6 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="font-semibold">Term Category</p>
+              <p className="font-semibold">Mixed Type Quiz</p>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                Assign the quiz to Prelims, Midterms, or Finals for term-based grade computation.
+                A mixed quiz allows multiple choice, identification, essay, and
+                computational questions to coexist in one quiz.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="font-semibold">Open date restriction</p>
+              <p className="font-semibold">Smart Percentage Allocation</p>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                The quiz cannot be set to open at a date or time that has already passed.
+                Entered percentages reserve items first. Any 0% fields receive an
+                equal share of the remaining items, with extras assigned from
+                left to right.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="font-semibold">Count Mode</p>
+              <p className="mt-2 text-sm leading-6 text-gray-300">
+                Use count mode when you want exact item counts per question type
+                in every attempt.
               </p>
             </div>
           </div>

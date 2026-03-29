@@ -30,12 +30,28 @@ export type QuizAvgAggregateOutputType = {
   maxAttempts: number | null
   questionsPerAttempt: number | null
   attemptTimeLimitMinutes: number | null
+  mcqPercentage: number | null
+  identificationPercentage: number | null
+  essayPercentage: number | null
+  computationalPercentage: number | null
+  mcqCount: number | null
+  identificationCount: number | null
+  essayCount: number | null
+  computationalCount: number | null
 }
 
 export type QuizSumAggregateOutputType = {
   maxAttempts: number | null
   questionsPerAttempt: number | null
   attemptTimeLimitMinutes: number | null
+  mcqPercentage: number | null
+  identificationPercentage: number | null
+  essayPercentage: number | null
+  computationalPercentage: number | null
+  mcqCount: number | null
+  identificationCount: number | null
+  essayCount: number | null
+  computationalCount: number | null
 }
 
 export type QuizMinAggregateOutputType = {
@@ -54,6 +70,15 @@ export type QuizMinAggregateOutputType = {
   opensAt: Date | null
   closesAt: Date | null
   attemptTimeLimitMinutes: number | null
+  compositionMode: $Enums.QuizCompositionMode | null
+  mcqPercentage: number | null
+  identificationPercentage: number | null
+  essayPercentage: number | null
+  computationalPercentage: number | null
+  mcqCount: number | null
+  identificationCount: number | null
+  essayCount: number | null
+  computationalCount: number | null
 }
 
 export type QuizMaxAggregateOutputType = {
@@ -72,6 +97,15 @@ export type QuizMaxAggregateOutputType = {
   opensAt: Date | null
   closesAt: Date | null
   attemptTimeLimitMinutes: number | null
+  compositionMode: $Enums.QuizCompositionMode | null
+  mcqPercentage: number | null
+  identificationPercentage: number | null
+  essayPercentage: number | null
+  computationalPercentage: number | null
+  mcqCount: number | null
+  identificationCount: number | null
+  essayCount: number | null
+  computationalCount: number | null
 }
 
 export type QuizCountAggregateOutputType = {
@@ -90,6 +124,15 @@ export type QuizCountAggregateOutputType = {
   opensAt: number
   closesAt: number
   attemptTimeLimitMinutes: number
+  compositionMode: number
+  mcqPercentage: number
+  identificationPercentage: number
+  essayPercentage: number
+  computationalPercentage: number
+  mcqCount: number
+  identificationCount: number
+  essayCount: number
+  computationalCount: number
   _all: number
 }
 
@@ -98,12 +141,28 @@ export type QuizAvgAggregateInputType = {
   maxAttempts?: true
   questionsPerAttempt?: true
   attemptTimeLimitMinutes?: true
+  mcqPercentage?: true
+  identificationPercentage?: true
+  essayPercentage?: true
+  computationalPercentage?: true
+  mcqCount?: true
+  identificationCount?: true
+  essayCount?: true
+  computationalCount?: true
 }
 
 export type QuizSumAggregateInputType = {
   maxAttempts?: true
   questionsPerAttempt?: true
   attemptTimeLimitMinutes?: true
+  mcqPercentage?: true
+  identificationPercentage?: true
+  essayPercentage?: true
+  computationalPercentage?: true
+  mcqCount?: true
+  identificationCount?: true
+  essayCount?: true
+  computationalCount?: true
 }
 
 export type QuizMinAggregateInputType = {
@@ -122,6 +181,15 @@ export type QuizMinAggregateInputType = {
   opensAt?: true
   closesAt?: true
   attemptTimeLimitMinutes?: true
+  compositionMode?: true
+  mcqPercentage?: true
+  identificationPercentage?: true
+  essayPercentage?: true
+  computationalPercentage?: true
+  mcqCount?: true
+  identificationCount?: true
+  essayCount?: true
+  computationalCount?: true
 }
 
 export type QuizMaxAggregateInputType = {
@@ -140,6 +208,15 @@ export type QuizMaxAggregateInputType = {
   opensAt?: true
   closesAt?: true
   attemptTimeLimitMinutes?: true
+  compositionMode?: true
+  mcqPercentage?: true
+  identificationPercentage?: true
+  essayPercentage?: true
+  computationalPercentage?: true
+  mcqCount?: true
+  identificationCount?: true
+  essayCount?: true
+  computationalCount?: true
 }
 
 export type QuizCountAggregateInputType = {
@@ -158,6 +235,15 @@ export type QuizCountAggregateInputType = {
   opensAt?: true
   closesAt?: true
   attemptTimeLimitMinutes?: true
+  compositionMode?: true
+  mcqPercentage?: true
+  identificationPercentage?: true
+  essayPercentage?: true
+  computationalPercentage?: true
+  mcqCount?: true
+  identificationCount?: true
+  essayCount?: true
+  computationalCount?: true
   _all?: true
 }
 
@@ -263,6 +349,15 @@ export type QuizGroupByOutputType = {
   opensAt: Date | null
   closesAt: Date | null
   attemptTimeLimitMinutes: number | null
+  compositionMode: $Enums.QuizCompositionMode
+  mcqPercentage: number | null
+  identificationPercentage: number | null
+  essayPercentage: number | null
+  computationalPercentage: number | null
+  mcqCount: number | null
+  identificationCount: number | null
+  essayCount: number | null
+  computationalCount: number | null
   _count: QuizCountAggregateOutputType | null
   _avg: QuizAvgAggregateOutputType | null
   _sum: QuizSumAggregateOutputType | null
@@ -304,6 +399,15 @@ export type QuizWhereInput = {
   opensAt?: Prisma.DateTimeNullableFilter<"Quiz"> | Date | string | null
   closesAt?: Prisma.DateTimeNullableFilter<"Quiz"> | Date | string | null
   attemptTimeLimitMinutes?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFilter<"Quiz"> | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  identificationPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  essayPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  computationalPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  mcqCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  identificationCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  essayCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  computationalCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
   questions?: Prisma.QuestionListRelationFilter
   attempts?: Prisma.QuizAttemptListRelationFilter
@@ -325,6 +429,15 @@ export type QuizOrderByWithRelationInput = {
   opensAt?: Prisma.SortOrderInput | Prisma.SortOrder
   closesAt?: Prisma.SortOrderInput | Prisma.SortOrder
   attemptTimeLimitMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
+  compositionMode?: Prisma.SortOrder
+  mcqPercentage?: Prisma.SortOrderInput | Prisma.SortOrder
+  identificationPercentage?: Prisma.SortOrderInput | Prisma.SortOrder
+  essayPercentage?: Prisma.SortOrderInput | Prisma.SortOrder
+  computationalPercentage?: Prisma.SortOrderInput | Prisma.SortOrder
+  mcqCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  identificationCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  essayCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  computationalCount?: Prisma.SortOrderInput | Prisma.SortOrder
   course?: Prisma.CourseOrderByWithRelationInput
   questions?: Prisma.QuestionOrderByRelationAggregateInput
   attempts?: Prisma.QuizAttemptOrderByRelationAggregateInput
@@ -349,6 +462,15 @@ export type QuizWhereUniqueInput = Prisma.AtLeast<{
   opensAt?: Prisma.DateTimeNullableFilter<"Quiz"> | Date | string | null
   closesAt?: Prisma.DateTimeNullableFilter<"Quiz"> | Date | string | null
   attemptTimeLimitMinutes?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFilter<"Quiz"> | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  identificationPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  essayPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  computationalPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  mcqCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  identificationCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  essayCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  computationalCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
   questions?: Prisma.QuestionListRelationFilter
   attempts?: Prisma.QuizAttemptListRelationFilter
@@ -370,6 +492,15 @@ export type QuizOrderByWithAggregationInput = {
   opensAt?: Prisma.SortOrderInput | Prisma.SortOrder
   closesAt?: Prisma.SortOrderInput | Prisma.SortOrder
   attemptTimeLimitMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
+  compositionMode?: Prisma.SortOrder
+  mcqPercentage?: Prisma.SortOrderInput | Prisma.SortOrder
+  identificationPercentage?: Prisma.SortOrderInput | Prisma.SortOrder
+  essayPercentage?: Prisma.SortOrderInput | Prisma.SortOrder
+  computationalPercentage?: Prisma.SortOrderInput | Prisma.SortOrder
+  mcqCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  identificationCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  essayCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  computationalCount?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.QuizCountOrderByAggregateInput
   _avg?: Prisma.QuizAvgOrderByAggregateInput
   _max?: Prisma.QuizMaxOrderByAggregateInput
@@ -396,6 +527,15 @@ export type QuizScalarWhereWithAggregatesInput = {
   opensAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Quiz"> | Date | string | null
   closesAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Quiz"> | Date | string | null
   attemptTimeLimitMinutes?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeWithAggregatesFilter<"Quiz"> | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
+  identificationPercentage?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
+  essayPercentage?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
+  computationalPercentage?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
+  mcqCount?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
+  identificationCount?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
+  essayCount?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
+  computationalCount?: Prisma.IntNullableWithAggregatesFilter<"Quiz"> | number | null
 }
 
 export type QuizCreateInput = {
@@ -413,6 +553,15 @@ export type QuizCreateInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
   course: Prisma.CourseCreateNestedOneWithoutQuizzesInput
   questions?: Prisma.QuestionCreateNestedManyWithoutQuizInput
   attempts?: Prisma.QuizAttemptCreateNestedManyWithoutQuizInput
@@ -434,6 +583,15 @@ export type QuizUncheckedCreateInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutQuizInput
   attempts?: Prisma.QuizAttemptUncheckedCreateNestedManyWithoutQuizInput
 }
@@ -453,6 +611,15 @@ export type QuizUpdateInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   course?: Prisma.CourseUpdateOneRequiredWithoutQuizzesNestedInput
   questions?: Prisma.QuestionUpdateManyWithoutQuizNestedInput
   attempts?: Prisma.QuizAttemptUpdateManyWithoutQuizNestedInput
@@ -474,6 +641,15 @@ export type QuizUncheckedUpdateInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutQuizNestedInput
   attempts?: Prisma.QuizAttemptUncheckedUpdateManyWithoutQuizNestedInput
 }
@@ -494,6 +670,15 @@ export type QuizCreateManyInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
 }
 
 export type QuizUpdateManyMutationInput = {
@@ -511,6 +696,15 @@ export type QuizUpdateManyMutationInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type QuizUncheckedUpdateManyInput = {
@@ -529,6 +723,15 @@ export type QuizUncheckedUpdateManyInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type QuizListRelationFilter = {
@@ -557,12 +760,29 @@ export type QuizCountOrderByAggregateInput = {
   opensAt?: Prisma.SortOrder
   closesAt?: Prisma.SortOrder
   attemptTimeLimitMinutes?: Prisma.SortOrder
+  compositionMode?: Prisma.SortOrder
+  mcqPercentage?: Prisma.SortOrder
+  identificationPercentage?: Prisma.SortOrder
+  essayPercentage?: Prisma.SortOrder
+  computationalPercentage?: Prisma.SortOrder
+  mcqCount?: Prisma.SortOrder
+  identificationCount?: Prisma.SortOrder
+  essayCount?: Prisma.SortOrder
+  computationalCount?: Prisma.SortOrder
 }
 
 export type QuizAvgOrderByAggregateInput = {
   maxAttempts?: Prisma.SortOrder
   questionsPerAttempt?: Prisma.SortOrder
   attemptTimeLimitMinutes?: Prisma.SortOrder
+  mcqPercentage?: Prisma.SortOrder
+  identificationPercentage?: Prisma.SortOrder
+  essayPercentage?: Prisma.SortOrder
+  computationalPercentage?: Prisma.SortOrder
+  mcqCount?: Prisma.SortOrder
+  identificationCount?: Prisma.SortOrder
+  essayCount?: Prisma.SortOrder
+  computationalCount?: Prisma.SortOrder
 }
 
 export type QuizMaxOrderByAggregateInput = {
@@ -581,6 +801,15 @@ export type QuizMaxOrderByAggregateInput = {
   opensAt?: Prisma.SortOrder
   closesAt?: Prisma.SortOrder
   attemptTimeLimitMinutes?: Prisma.SortOrder
+  compositionMode?: Prisma.SortOrder
+  mcqPercentage?: Prisma.SortOrder
+  identificationPercentage?: Prisma.SortOrder
+  essayPercentage?: Prisma.SortOrder
+  computationalPercentage?: Prisma.SortOrder
+  mcqCount?: Prisma.SortOrder
+  identificationCount?: Prisma.SortOrder
+  essayCount?: Prisma.SortOrder
+  computationalCount?: Prisma.SortOrder
 }
 
 export type QuizMinOrderByAggregateInput = {
@@ -599,12 +828,29 @@ export type QuizMinOrderByAggregateInput = {
   opensAt?: Prisma.SortOrder
   closesAt?: Prisma.SortOrder
   attemptTimeLimitMinutes?: Prisma.SortOrder
+  compositionMode?: Prisma.SortOrder
+  mcqPercentage?: Prisma.SortOrder
+  identificationPercentage?: Prisma.SortOrder
+  essayPercentage?: Prisma.SortOrder
+  computationalPercentage?: Prisma.SortOrder
+  mcqCount?: Prisma.SortOrder
+  identificationCount?: Prisma.SortOrder
+  essayCount?: Prisma.SortOrder
+  computationalCount?: Prisma.SortOrder
 }
 
 export type QuizSumOrderByAggregateInput = {
   maxAttempts?: Prisma.SortOrder
   questionsPerAttempt?: Prisma.SortOrder
   attemptTimeLimitMinutes?: Prisma.SortOrder
+  mcqPercentage?: Prisma.SortOrder
+  identificationPercentage?: Prisma.SortOrder
+  essayPercentage?: Prisma.SortOrder
+  computationalPercentage?: Prisma.SortOrder
+  mcqCount?: Prisma.SortOrder
+  identificationCount?: Prisma.SortOrder
+  essayCount?: Prisma.SortOrder
+  computationalCount?: Prisma.SortOrder
 }
 
 export type QuizScalarRelationFilter = {
@@ -678,6 +924,10 @@ export type EnumQuizTypeFieldUpdateOperationsInput = {
   set?: $Enums.QuizType
 }
 
+export type EnumQuizCompositionModeFieldUpdateOperationsInput = {
+  set?: $Enums.QuizCompositionMode
+}
+
 export type QuizCreateNestedOneWithoutQuestionsInput = {
   create?: Prisma.XOR<Prisma.QuizCreateWithoutQuestionsInput, Prisma.QuizUncheckedCreateWithoutQuestionsInput>
   connectOrCreate?: Prisma.QuizCreateOrConnectWithoutQuestionsInput
@@ -721,6 +971,15 @@ export type QuizCreateWithoutCourseInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
   questions?: Prisma.QuestionCreateNestedManyWithoutQuizInput
   attempts?: Prisma.QuizAttemptCreateNestedManyWithoutQuizInput
 }
@@ -740,6 +999,15 @@ export type QuizUncheckedCreateWithoutCourseInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutQuizInput
   attempts?: Prisma.QuizAttemptUncheckedCreateNestedManyWithoutQuizInput
 }
@@ -789,6 +1057,15 @@ export type QuizScalarWhereInput = {
   opensAt?: Prisma.DateTimeNullableFilter<"Quiz"> | Date | string | null
   closesAt?: Prisma.DateTimeNullableFilter<"Quiz"> | Date | string | null
   attemptTimeLimitMinutes?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFilter<"Quiz"> | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  identificationPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  essayPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  computationalPercentage?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  mcqCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  identificationCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  essayCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
+  computationalCount?: Prisma.IntNullableFilter<"Quiz"> | number | null
 }
 
 export type QuizCreateWithoutQuestionsInput = {
@@ -806,6 +1083,15 @@ export type QuizCreateWithoutQuestionsInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
   course: Prisma.CourseCreateNestedOneWithoutQuizzesInput
   attempts?: Prisma.QuizAttemptCreateNestedManyWithoutQuizInput
 }
@@ -826,6 +1112,15 @@ export type QuizUncheckedCreateWithoutQuestionsInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
   attempts?: Prisma.QuizAttemptUncheckedCreateNestedManyWithoutQuizInput
 }
 
@@ -860,6 +1155,15 @@ export type QuizUpdateWithoutQuestionsInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   course?: Prisma.CourseUpdateOneRequiredWithoutQuizzesNestedInput
   attempts?: Prisma.QuizAttemptUpdateManyWithoutQuizNestedInput
 }
@@ -880,6 +1184,15 @@ export type QuizUncheckedUpdateWithoutQuestionsInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   attempts?: Prisma.QuizAttemptUncheckedUpdateManyWithoutQuizNestedInput
 }
 
@@ -898,6 +1211,15 @@ export type QuizCreateWithoutAttemptsInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
   course: Prisma.CourseCreateNestedOneWithoutQuizzesInput
   questions?: Prisma.QuestionCreateNestedManyWithoutQuizInput
 }
@@ -918,6 +1240,15 @@ export type QuizUncheckedCreateWithoutAttemptsInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutQuizInput
 }
 
@@ -952,6 +1283,15 @@ export type QuizUpdateWithoutAttemptsInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   course?: Prisma.CourseUpdateOneRequiredWithoutQuizzesNestedInput
   questions?: Prisma.QuestionUpdateManyWithoutQuizNestedInput
 }
@@ -972,6 +1312,15 @@ export type QuizUncheckedUpdateWithoutAttemptsInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutQuizNestedInput
 }
 
@@ -990,6 +1339,15 @@ export type QuizCreateManyCourseInput = {
   opensAt?: Date | string | null
   closesAt?: Date | string | null
   attemptTimeLimitMinutes?: number | null
+  compositionMode?: $Enums.QuizCompositionMode
+  mcqPercentage?: number | null
+  identificationPercentage?: number | null
+  essayPercentage?: number | null
+  computationalPercentage?: number | null
+  mcqCount?: number | null
+  identificationCount?: number | null
+  essayCount?: number | null
+  computationalCount?: number | null
 }
 
 export type QuizUpdateWithoutCourseInput = {
@@ -1007,6 +1365,15 @@ export type QuizUpdateWithoutCourseInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   questions?: Prisma.QuestionUpdateManyWithoutQuizNestedInput
   attempts?: Prisma.QuizAttemptUpdateManyWithoutQuizNestedInput
 }
@@ -1026,6 +1393,15 @@ export type QuizUncheckedUpdateWithoutCourseInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutQuizNestedInput
   attempts?: Prisma.QuizAttemptUncheckedUpdateManyWithoutQuizNestedInput
 }
@@ -1045,6 +1421,15 @@ export type QuizUncheckedUpdateManyWithoutCourseInput = {
   opensAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   closesAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   attemptTimeLimitMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  compositionMode?: Prisma.EnumQuizCompositionModeFieldUpdateOperationsInput | $Enums.QuizCompositionMode
+  mcqPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalPercentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mcqCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  identificationCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  essayCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  computationalCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -1103,6 +1488,15 @@ export type QuizSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   opensAt?: boolean
   closesAt?: boolean
   attemptTimeLimitMinutes?: boolean
+  compositionMode?: boolean
+  mcqPercentage?: boolean
+  identificationPercentage?: boolean
+  essayPercentage?: boolean
+  computationalPercentage?: boolean
+  mcqCount?: boolean
+  identificationCount?: boolean
+  essayCount?: boolean
+  computationalCount?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
   questions?: boolean | Prisma.Quiz$questionsArgs<ExtArgs>
   attempts?: boolean | Prisma.Quiz$attemptsArgs<ExtArgs>
@@ -1125,6 +1519,15 @@ export type QuizSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   opensAt?: boolean
   closesAt?: boolean
   attemptTimeLimitMinutes?: boolean
+  compositionMode?: boolean
+  mcqPercentage?: boolean
+  identificationPercentage?: boolean
+  essayPercentage?: boolean
+  computationalPercentage?: boolean
+  mcqCount?: boolean
+  identificationCount?: boolean
+  essayCount?: boolean
+  computationalCount?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["quiz"]>
 
@@ -1144,6 +1547,15 @@ export type QuizSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   opensAt?: boolean
   closesAt?: boolean
   attemptTimeLimitMinutes?: boolean
+  compositionMode?: boolean
+  mcqPercentage?: boolean
+  identificationPercentage?: boolean
+  essayPercentage?: boolean
+  computationalPercentage?: boolean
+  mcqCount?: boolean
+  identificationCount?: boolean
+  essayCount?: boolean
+  computationalCount?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["quiz"]>
 
@@ -1163,9 +1575,18 @@ export type QuizSelectScalar = {
   opensAt?: boolean
   closesAt?: boolean
   attemptTimeLimitMinutes?: boolean
+  compositionMode?: boolean
+  mcqPercentage?: boolean
+  identificationPercentage?: boolean
+  essayPercentage?: boolean
+  computationalPercentage?: boolean
+  mcqCount?: boolean
+  identificationCount?: boolean
+  essayCount?: boolean
+  computationalCount?: boolean
 }
 
-export type QuizOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "courseId" | "title" | "description" | "createdAt" | "maxAttempts" | "questionsPerAttempt" | "shuffleOptions" | "avoidRepeatedQuestions" | "quizType" | "adaptiveMode" | "term" | "opensAt" | "closesAt" | "attemptTimeLimitMinutes", ExtArgs["result"]["quiz"]>
+export type QuizOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "courseId" | "title" | "description" | "createdAt" | "maxAttempts" | "questionsPerAttempt" | "shuffleOptions" | "avoidRepeatedQuestions" | "quizType" | "adaptiveMode" | "term" | "opensAt" | "closesAt" | "attemptTimeLimitMinutes" | "compositionMode" | "mcqPercentage" | "identificationPercentage" | "essayPercentage" | "computationalPercentage" | "mcqCount" | "identificationCount" | "essayCount" | "computationalCount", ExtArgs["result"]["quiz"]>
 export type QuizInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
   questions?: boolean | Prisma.Quiz$questionsArgs<ExtArgs>
@@ -1202,6 +1623,15 @@ export type $QuizPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     opensAt: Date | null
     closesAt: Date | null
     attemptTimeLimitMinutes: number | null
+    compositionMode: $Enums.QuizCompositionMode
+    mcqPercentage: number | null
+    identificationPercentage: number | null
+    essayPercentage: number | null
+    computationalPercentage: number | null
+    mcqCount: number | null
+    identificationCount: number | null
+    essayCount: number | null
+    computationalCount: number | null
   }, ExtArgs["result"]["quiz"]>
   composites: {}
 }
@@ -1643,6 +2073,15 @@ export interface QuizFieldRefs {
   readonly opensAt: Prisma.FieldRef<"Quiz", 'DateTime'>
   readonly closesAt: Prisma.FieldRef<"Quiz", 'DateTime'>
   readonly attemptTimeLimitMinutes: Prisma.FieldRef<"Quiz", 'Int'>
+  readonly compositionMode: Prisma.FieldRef<"Quiz", 'QuizCompositionMode'>
+  readonly mcqPercentage: Prisma.FieldRef<"Quiz", 'Int'>
+  readonly identificationPercentage: Prisma.FieldRef<"Quiz", 'Int'>
+  readonly essayPercentage: Prisma.FieldRef<"Quiz", 'Int'>
+  readonly computationalPercentage: Prisma.FieldRef<"Quiz", 'Int'>
+  readonly mcqCount: Prisma.FieldRef<"Quiz", 'Int'>
+  readonly identificationCount: Prisma.FieldRef<"Quiz", 'Int'>
+  readonly essayCount: Prisma.FieldRef<"Quiz", 'Int'>
+  readonly computationalCount: Prisma.FieldRef<"Quiz", 'Int'>
 }
     
 

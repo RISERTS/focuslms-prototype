@@ -3,24 +3,25 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 
 type SubmittedAnswer = {
-  questionId: string;
-  selectedAnswer: string;
-  responseTimeSeconds: number;
+  questionId?: string;
+  selectedAnswer?: string;
+  responseTimeSeconds?: number;
 };
 
-function normalizeText(value: string): string {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
+function normalizeText(value: string) {
+  return value.trim().toLowerCase();
 }
 
-function isComputationalMatch(expected: string, actual: string): boolean {
-  const expectedNum = Number(expected);
-  const actualNum = Number(actual);
+function isCorrectAnswer(args: {
+  questionType: string;
+  submittedAnswer: string;
+  correctAnswer: string | null;
+}) {
+  const { submittedAnswer, correctAnswer } = args;
 
-  if (!Number.isNaN(expectedNum) && !Number.isNaN(actualNum)) {
-    return expectedNum === actualNum;
-  }
+  if (!correctAnswer) return false;
 
-  return normalizeText(expected) === normalizeText(actual);
+  return normalizeText(submittedAnswer) === normalizeText(correctAnswer);
 }
 
 export async function POST(req: Request) {
@@ -33,27 +34,47 @@ export async function POST(req: Request) {
 
     const body = (await req.json()) as {
       quizId?: string;
-      totalElapsedSeconds?: number;
+      startedAt?: string;
       answers?: SubmittedAnswer[];
     };
 
-    const { quizId, totalElapsedSeconds, answers } = body;
+    const quizId = String(body.quizId || "").trim();
+    const submittedAnswers = Array.isArray(body.answers) ? body.answers : [];
 
-    if (!quizId || !answers?.length) {
+    if (!quizId) {
+      return NextResponse.json({ error: "Quiz is required." }, { status: 400 });
+    }
+
+    if (submittedAnswers.length === 0) {
       return NextResponse.json(
-        { error: "Quiz and answers are required." },
+        { error: "No answers were submitted." },
         { status: 400 }
       );
     }
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
-      include: {
-        course: true,
-        questions: true,
+      select: {
+        id: true,
+        courseId: true,
+        maxAttempts: true,
+        opensAt: true,
+        closesAt: true,
+        attemptTimeLimitMinutes: true,
+        questions: {
+          select: {
+            id: true,
+            questionType: true,
+            correctAnswer: true,
+            difficulty: true,
+          },
+        },
         attempts: {
           where: {
             studentId: session.userId,
+          },
+          select: {
+            id: true,
           },
         },
       },
@@ -63,22 +84,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Quiz not found." }, { status: 404 });
     }
 
-    const now = new Date();
-
-    if (quiz.opensAt && now < quiz.opensAt) {
-      return NextResponse.json(
-        { error: "This quiz is not yet open." },
-        { status: 403 }
-      );
-    }
-
-    if (quiz.closesAt && now > quiz.closesAt) {
-      return NextResponse.json(
-        { error: "This quiz is already closed." },
-        { status: 403 }
-      );
-    }
-
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
@@ -86,126 +91,131 @@ export async function POST(req: Request) {
           courseId: quiz.courseId,
         },
       },
+      select: {
+        status: true,
+      },
     });
 
-    if (!enrollment) {
+    if (!enrollment || enrollment.status !== "APPROVED") {
       return NextResponse.json(
-        { error: "You are not enrolled in this course." },
+        { error: "You are not allowed to submit this quiz." },
         { status: 403 }
+      );
+    }
+
+    const now = new Date();
+
+    if (quiz.opensAt && quiz.opensAt > now) {
+      return NextResponse.json(
+        { error: "This quiz is not yet open." },
+        { status: 400 }
+      );
+    }
+
+    if (quiz.closesAt && quiz.closesAt < now) {
+      return NextResponse.json(
+        { error: "This quiz is already closed." },
+        { status: 400 }
       );
     }
 
     if (quiz.attempts.length >= quiz.maxAttempts) {
       return NextResponse.json(
-        { error: "Maximum quiz attempts reached." },
-        { status: 403 }
+        { error: "You have already used all allowed attempts." },
+        { status: 400 }
       );
     }
 
-    if (
-      quiz.attemptTimeLimitMinutes &&
-      typeof totalElapsedSeconds === "number" &&
-      totalElapsedSeconds > quiz.attemptTimeLimitMinutes * 60
-    ) {
-      return NextResponse.json(
-        { error: "Attempt time limit exceeded." },
-        { status: 403 }
-      );
-    }
+    const startedAt =
+      body.startedAt && !Number.isNaN(new Date(body.startedAt).getTime())
+        ? new Date(body.startedAt)
+        : new Date();
 
-    const attempt = await prisma.quizAttempt.create({
-      data: {
-        quizId,
-        studentId: session.userId,
-        startedAt: new Date(),
-        finishedAt: new Date(),
-      },
-    });
+    const finishedAt = new Date();
+
+    const questionMap = new Map(
+      quiz.questions.map((question) => [question.id, question])
+    );
 
     let autoGradedCount = 0;
     let correctCount = 0;
 
-    const answerRows = answers.map((answer) => {
-      const question = quiz.questions.find((q) => q.id === answer.questionId);
+    const preparedAnswers = submittedAnswers.map((answer, index) => {
+      const questionId = String(answer.questionId || "").trim();
+      const selectedAnswer = String(answer.selectedAnswer || "").trim();
+      const responseTimeSeconds = Math.max(
+        0,
+        Number(answer.responseTimeSeconds || 0)
+      );
+
+      const question = questionMap.get(questionId);
 
       if (!question) {
-        return null;
+        throw new Error(`Submitted question ${index + 1} is invalid.`);
       }
+
+      const isEssayManual =
+        question.questionType === "ESSAY" && question.correctAnswer === null;
 
       let isCorrect = false;
-      let isAutoGradable = true;
-      const expected = question.correctAnswer ?? "";
 
-      if (question.questionType === "MULTIPLE_CHOICE") {
-        isCorrect = expected === answer.selectedAnswer;
-      } else if (question.questionType === "IDENTIFICATION") {
-        isCorrect =
-          normalizeText(expected) === normalizeText(answer.selectedAnswer);
-      } else if (question.questionType === "COMPUTATIONAL") {
-        isCorrect = isComputationalMatch(expected, answer.selectedAnswer);
-      } else {
-        isAutoGradable = false;
-        isCorrect = false;
-      }
+      if (!isEssayManual) {
+        autoGradedCount += 1;
+        isCorrect = isCorrectAnswer({
+          questionType: question.questionType,
+          submittedAnswer: selectedAnswer,
+          correctAnswer: question.correctAnswer,
+        });
 
-      if (isAutoGradable) {
-        autoGradedCount++;
         if (isCorrect) {
-          correctCount++;
+          correctCount += 1;
         }
       }
 
       return {
-        attemptId: attempt.id,
-        questionId: answer.questionId,
-        selectedAnswer: answer.selectedAnswer,
+        questionId: question.id,
+        selectedAnswer,
         isCorrect,
-        responseTimeSeconds: Number(answer.responseTimeSeconds || 0),
+        responseTimeSeconds,
         difficultyServed: question.difficulty,
       };
-    });
-
-    const validRows = answerRows.filter(
-      (row): row is NonNullable<typeof row> => row !== null
-    );
-
-    await prisma.quizAnswer.createMany({
-      data: validRows,
     });
 
     const score =
       autoGradedCount > 0 ? (correctCount / autoGradedCount) * 100 : 0;
 
-    await prisma.quizAttempt.update({
-      where: { id: attempt.id },
-      data: { score },
-    });
-
-    await prisma.activityLog.create({
+    const createdAttempt = await prisma.quizAttempt.create({
       data: {
-        userId: session.userId,
-        courseId: quiz.courseId,
-        actionType: "SUBMIT_QUIZ",
-        targetId: quiz.id,
-        durationSeconds:
-          typeof totalElapsedSeconds === "number"
-            ? totalElapsedSeconds
-            : validRows.reduce((sum, row) => sum + row.responseTimeSeconds, 0),
+        quizId: quiz.id,
+        studentId: session.userId,
+        startedAt,
+        finishedAt,
+        score,
+        answers: {
+          create: preparedAnswers,
+        },
+      },
+      select: {
+        id: true,
+        score: true,
       },
     });
 
     return NextResponse.json({
       message: "Quiz submitted successfully.",
-      score,
-      note:
-        quiz.quizType === "ESSAY" || quiz.quizType === "MIXED"
-          ? "Essay answers may require instructor review."
-          : undefined,
+      attemptId: createdAttempt.id,
+      score: createdAttempt.score ?? 0,
+      percentage: createdAttempt.score ?? 0,
     });
   } catch (error) {
     console.error("Quiz submit error:", error);
     return NextResponse.json(
-      { error: "Failed to submit quiz." },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit quiz.",
+      },
       { status: 500 }
     );
   }

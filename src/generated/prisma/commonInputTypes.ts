@@ -237,6 +237,13 @@ export type EnumQuizTypeFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumQuizTypeFilter<$PrismaModel> | $Enums.QuizType
 }
 
+export type EnumQuizCompositionModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuizCompositionMode | Prisma.EnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  in?: $Enums.QuizCompositionMode[] | Prisma.ListEnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuizCompositionMode[] | Prisma.ListEnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuizCompositionModeFilter<$PrismaModel> | $Enums.QuizCompositionMode
+}
+
 export type IntWithAggregatesFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -285,6 +292,16 @@ export type EnumQuizTypeWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumQuizTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumQuizTypeFilter<$PrismaModel>
+}
+
+export type EnumQuizCompositionModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuizCompositionMode | Prisma.EnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  in?: $Enums.QuizCompositionMode[] | Prisma.ListEnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuizCompositionMode[] | Prisma.ListEnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuizCompositionModeWithAggregatesFilter<$PrismaModel> | $Enums.QuizCompositionMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuizCompositionModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuizCompositionModeFilter<$PrismaModel>
 }
 
 export type EnumDifficultyLevelFilter<$PrismaModel = never> = {
@@ -579,6 +596,13 @@ export type NestedEnumQuizTypeFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumQuizTypeFilter<$PrismaModel> | $Enums.QuizType
 }
 
+export type NestedEnumQuizCompositionModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuizCompositionMode | Prisma.EnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  in?: $Enums.QuizCompositionMode[] | Prisma.ListEnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuizCompositionMode[] | Prisma.ListEnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuizCompositionModeFilter<$PrismaModel> | $Enums.QuizCompositionMode
+}
+
 export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -649,6 +673,16 @@ export type NestedEnumQuizTypeWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumQuizTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumQuizTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumQuizCompositionModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuizCompositionMode | Prisma.EnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  in?: $Enums.QuizCompositionMode[] | Prisma.ListEnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuizCompositionMode[] | Prisma.ListEnumQuizCompositionModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuizCompositionModeWithAggregatesFilter<$PrismaModel> | $Enums.QuizCompositionMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuizCompositionModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuizCompositionModeFilter<$PrismaModel>
 }
 
 export type NestedEnumDifficultyLevelFilter<$PrismaModel = never> = {

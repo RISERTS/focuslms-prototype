@@ -35,7 +35,7 @@ export default async function EditQuizSettingsPage({
   return (
     <InstructorShell
       title="Edit Quiz Settings"
-      description="Update the quiz title, term, type, attempts, schedule, and timing settings."
+      description="Update quiz settings, schedule, and mixed-type composition."
       actions={[
         {
           label: "Back to Quiz",
@@ -60,6 +60,16 @@ export default async function EditQuizSettingsPage({
           opensAt: quiz.opensAt ? quiz.opensAt.toISOString() : null,
           closesAt: quiz.closesAt ? quiz.closesAt.toISOString() : null,
           attemptTimeLimitMinutes: quiz.attemptTimeLimitMinutes,
+
+          compositionMode: quiz.compositionMode,
+          mcqPercentage: quiz.mcqPercentage,
+          identificationPercentage: quiz.identificationPercentage,
+          essayPercentage: quiz.essayPercentage,
+          computationalPercentage: quiz.computationalPercentage,
+          mcqCount: quiz.mcqCount,
+          identificationCount: quiz.identificationCount,
+          essayCount: quiz.essayCount,
+          computationalCount: quiz.computationalCount,
         }}
       />
     </InstructorShell>

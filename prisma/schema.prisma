@@ -66,6 +66,12 @@ enum TermCategory {
   FINALS
 }
 
+enum QuizCompositionMode {
+  NONE
+  PERCENTAGE
+  COUNT
+}
+
 model User {
   id                String             @id @default(cuid())
   name              String
@@ -147,6 +153,17 @@ model Quiz {
   closesAt                DateTime?
   attemptTimeLimitMinutes Int?
 
+  compositionMode          QuizCompositionMode @default(NONE)
+  mcqPercentage            Int?
+  identificationPercentage Int?
+  essayPercentage          Int?
+  computationalPercentage  Int?
+
+  mcqCount            Int?
+  identificationCount Int?
+  essayCount          Int?
+  computationalCount  Int?
+
   course    Course        @relation(fields: [courseId], references: [id])
   questions Question[]
   attempts  QuizAttempt[]
@@ -170,13 +187,15 @@ model Question {
 }
 
 model QuizAttempt {
-  id          String    @id @default(cuid())
-  quizId      String
-  studentId   String
-  startedAt   DateTime  @default(now())
-  finishedAt  DateTime?
-  score       Float?
-  beiSnapshot Float?
+  id                       String    @id @default(cuid())
+  quizId                   String
+  studentId                String
+  startedAt                DateTime  @default(now())
+  finishedAt               DateTime?
+  score                    Float?
+  beiSnapshot              Float?
+  currentQuestionId        String?
+  currentQuestionStartedAt DateTime?
 
   quiz    Quiz         @relation(fields: [quizId], references: [id])
   student User         @relation(fields: [studentId], references: [id])

@@ -151,7 +151,16 @@ export const QuizScalarFieldEnum = {
   term: 'term',
   opensAt: 'opensAt',
   closesAt: 'closesAt',
-  attemptTimeLimitMinutes: 'attemptTimeLimitMinutes'
+  attemptTimeLimitMinutes: 'attemptTimeLimitMinutes',
+  compositionMode: 'compositionMode',
+  mcqPercentage: 'mcqPercentage',
+  identificationPercentage: 'identificationPercentage',
+  essayPercentage: 'essayPercentage',
+  computationalPercentage: 'computationalPercentage',
+  mcqCount: 'mcqCount',
+  identificationCount: 'identificationCount',
+  essayCount: 'essayCount',
+  computationalCount: 'computationalCount'
 } as const
 
 export type QuizScalarFieldEnum = (typeof QuizScalarFieldEnum)[keyof typeof QuizScalarFieldEnum]
@@ -181,7 +190,9 @@ export const QuizAttemptScalarFieldEnum = {
   startedAt: 'startedAt',
   finishedAt: 'finishedAt',
   score: 'score',
-  beiSnapshot: 'beiSnapshot'
+  beiSnapshot: 'beiSnapshot',
+  currentQuestionId: 'currentQuestionId',
+  currentQuestionStartedAt: 'currentQuestionStartedAt'
 } as const
 
 export type QuizAttemptScalarFieldEnum = (typeof QuizAttemptScalarFieldEnum)[keyof typeof QuizAttemptScalarFieldEnum]

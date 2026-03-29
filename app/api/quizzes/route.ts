@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
-
-type QuizType =
-  | "MULTIPLE_CHOICE"
-  | "IDENTIFICATION"
-  | "ESSAY"
-  | "COMPUTATIONAL"
-  | "MIXED";
+import {
+  normalizeCompositionForSave,
+  type QuizCompositionMode,
+  type QuizType,
+} from "@/lib/quiz-composition";
 
 type TermCategory = "PRELIMS" | "MIDTERMS" | "FINALS";
 
@@ -15,11 +13,7 @@ export async function POST(req: Request) {
   try {
     const session = await getSession();
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
-
-    if (session.role !== "INSTRUCTOR") {
+    if (!session || session.role !== "INSTRUCTOR") {
       return NextResponse.json(
         { error: "Only instructors can create quizzes." },
         { status: 403 }
@@ -40,25 +34,22 @@ export async function POST(req: Request) {
       opensAt?: string | null;
       closesAt?: string | null;
       attemptTimeLimitMinutes?: number | null;
+
+      compositionMode?: QuizCompositionMode;
+      mcqPercentage?: number | null;
+      identificationPercentage?: number | null;
+      essayPercentage?: number | null;
+      computationalPercentage?: number | null;
+      mcqCount?: number | null;
+      identificationCount?: number | null;
+      essayCount?: number | null;
+      computationalCount?: number | null;
     };
 
-    const {
-      courseId,
-      title,
-      description,
-      maxAttempts,
-      questionsPerAttempt,
-      shuffleOptions,
-      avoidRepeatedQuestions,
-      quizType,
-      adaptiveMode,
-      term,
-      opensAt,
-      closesAt,
-      attemptTimeLimitMinutes,
-    } = body;
+    const courseId = String(body.courseId || "").trim();
+    const title = String(body.title || "").trim();
 
-    if (!courseId || !title?.trim()) {
+    if (!courseId || !title) {
       return NextResponse.json(
         { error: "Course and quiz title are required." },
         { status: 400 }
@@ -81,22 +72,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const opensAtDate = opensAt ? new Date(opensAt) : null;
-    const closesAtDate = closesAt ? new Date(closesAt) : null;
+    const opensAtDate = body.opensAt ? new Date(body.opensAt) : null;
+    const closesAtDate = body.closesAt ? new Date(body.closesAt) : null;
     const now = new Date();
 
     if (opensAtDate && Number.isNaN(opensAtDate.getTime())) {
-      return NextResponse.json(
-        { error: "Invalid open date/time." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid open date/time." }, { status: 400 });
     }
 
     if (closesAtDate && Number.isNaN(closesAtDate.getTime())) {
-      return NextResponse.json(
-        { error: "Invalid close date/time." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid close date/time." }, { status: 400 });
     }
 
     if (opensAtDate && opensAtDate < now) {
@@ -113,27 +98,65 @@ export async function POST(req: Request) {
       );
     }
 
+    let composition;
+    try {
+      composition = normalizeCompositionForSave({
+        quizType: body.quizType ?? "MULTIPLE_CHOICE",
+        questionsPerAttempt:
+          body.questionsPerAttempt && body.questionsPerAttempt > 0
+            ? Number(body.questionsPerAttempt)
+            : null,
+        compositionMode: body.compositionMode ?? "NONE",
+        mcqPercentage: body.mcqPercentage ?? null,
+        identificationPercentage: body.identificationPercentage ?? null,
+        essayPercentage: body.essayPercentage ?? null,
+        computationalPercentage: body.computationalPercentage ?? null,
+        mcqCount: body.mcqCount ?? null,
+        identificationCount: body.identificationCount ?? null,
+        essayCount: body.essayCount ?? null,
+        computationalCount: body.computationalCount ?? null,
+      });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Invalid mixed quiz configuration.",
+        },
+        { status: 400 }
+      );
+    }
+
     const quiz = await prisma.quiz.create({
       data: {
         courseId,
-        title: title.trim(),
-        description: description?.trim() || null,
-        maxAttempts: maxAttempts && maxAttempts > 0 ? maxAttempts : 3,
-        questionsPerAttempt:
-          questionsPerAttempt && questionsPerAttempt > 0
-            ? questionsPerAttempt
-            : null,
-        shuffleOptions: shuffleOptions ?? true,
-        avoidRepeatedQuestions: avoidRepeatedQuestions ?? true,
-        quizType: quizType ?? "MULTIPLE_CHOICE",
-        adaptiveMode: adaptiveMode ?? false,
-        term: term ?? "PRELIMS",
+        title,
+        description: String(body.description || "").trim() || null,
+        maxAttempts:
+          body.maxAttempts && body.maxAttempts > 0 ? Number(body.maxAttempts) : 3,
+        questionsPerAttempt: composition.questionsPerAttempt,
+        shuffleOptions: body.shuffleOptions ?? true,
+        avoidRepeatedQuestions: body.avoidRepeatedQuestions ?? true,
+        quizType: body.quizType ?? "MULTIPLE_CHOICE",
+        adaptiveMode: body.adaptiveMode ?? false,
+        term: body.term ?? "PRELIMS",
         opensAt: opensAtDate,
         closesAt: closesAtDate,
         attemptTimeLimitMinutes:
-          attemptTimeLimitMinutes && attemptTimeLimitMinutes > 0
-            ? attemptTimeLimitMinutes
+          body.attemptTimeLimitMinutes && body.attemptTimeLimitMinutes > 0
+            ? Number(body.attemptTimeLimitMinutes)
             : null,
+
+        compositionMode: composition.compositionMode,
+        mcqPercentage: composition.mcqPercentage,
+        identificationPercentage: composition.identificationPercentage,
+        essayPercentage: composition.essayPercentage,
+        computationalPercentage: composition.computationalPercentage,
+        mcqCount: composition.mcqCount,
+        identificationCount: composition.identificationCount,
+        essayCount: composition.essayCount,
+        computationalCount: composition.computationalCount,
       },
     });
 

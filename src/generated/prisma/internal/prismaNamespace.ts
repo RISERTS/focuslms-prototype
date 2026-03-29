@@ -1264,7 +1264,16 @@ export const QuizScalarFieldEnum = {
   term: 'term',
   opensAt: 'opensAt',
   closesAt: 'closesAt',
-  attemptTimeLimitMinutes: 'attemptTimeLimitMinutes'
+  attemptTimeLimitMinutes: 'attemptTimeLimitMinutes',
+  compositionMode: 'compositionMode',
+  mcqPercentage: 'mcqPercentage',
+  identificationPercentage: 'identificationPercentage',
+  essayPercentage: 'essayPercentage',
+  computationalPercentage: 'computationalPercentage',
+  mcqCount: 'mcqCount',
+  identificationCount: 'identificationCount',
+  essayCount: 'essayCount',
+  computationalCount: 'computationalCount'
 } as const
 
 export type QuizScalarFieldEnum = (typeof QuizScalarFieldEnum)[keyof typeof QuizScalarFieldEnum]
@@ -1294,7 +1303,9 @@ export const QuizAttemptScalarFieldEnum = {
   startedAt: 'startedAt',
   finishedAt: 'finishedAt',
   score: 'score',
-  beiSnapshot: 'beiSnapshot'
+  beiSnapshot: 'beiSnapshot',
+  currentQuestionId: 'currentQuestionId',
+  currentQuestionStartedAt: 'currentQuestionStartedAt'
 } as const
 
 export type QuizAttemptScalarFieldEnum = (typeof QuizAttemptScalarFieldEnum)[keyof typeof QuizAttemptScalarFieldEnum]
@@ -1490,6 +1501,20 @@ export type EnumQuizTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
  * Reference to a field of type 'QuizType[]'
  */
 export type ListEnumQuizTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuizType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'QuizCompositionMode'
+ */
+export type EnumQuizCompositionModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuizCompositionMode'>
+    
+
+
+/**
+ * Reference to a field of type 'QuizCompositionMode[]'
+ */
+export type ListEnumQuizCompositionModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuizCompositionMode[]'>
     
 
 

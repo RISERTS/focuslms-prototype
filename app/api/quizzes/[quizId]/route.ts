@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
-
-type QuizType =
-  | "MULTIPLE_CHOICE"
-  | "IDENTIFICATION"
-  | "ESSAY"
-  | "COMPUTATIONAL"
-  | "MIXED";
+import {
+  normalizeCompositionForSave,
+  type QuizCompositionMode,
+  type QuizType,
+} from "@/lib/quiz-composition";
 
 type TermCategory = "PRELIMS" | "MIDTERMS" | "FINALS";
 
@@ -18,11 +16,7 @@ export async function PATCH(
   try {
     const session = await getSession();
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
-
-    if (session.role !== "INSTRUCTOR") {
+    if (!session || session.role !== "INSTRUCTOR") {
       return NextResponse.json(
         { error: "Only instructors can update quiz settings." },
         { status: 403 }
@@ -44,12 +38,23 @@ export async function PATCH(
       opensAt?: string | null;
       closesAt?: string | null;
       attemptTimeLimitMinutes?: number | null;
+
+      compositionMode?: QuizCompositionMode;
+      mcqPercentage?: number | null;
+      identificationPercentage?: number | null;
+      essayPercentage?: number | null;
+      computationalPercentage?: number | null;
+      mcqCount?: number | null;
+      identificationCount?: number | null;
+      essayCount?: number | null;
+      computationalCount?: number | null;
     };
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
       select: {
         id: true,
+        title: true,
         quizType: true,
         term: true,
         maxAttempts: true,
@@ -57,6 +62,7 @@ export async function PATCH(
         avoidRepeatedQuestions: true,
         adaptiveMode: true,
         opensAt: true,
+        compositionMode: true,
         course: {
           select: {
             instructorId: true,
@@ -76,7 +82,8 @@ export async function PATCH(
       );
     }
 
-    if (!body.title?.trim()) {
+    const title = String(body.title || "").trim();
+    if (!title) {
       return NextResponse.json(
         { error: "Quiz title is required." },
         { status: 400 }
@@ -88,17 +95,11 @@ export async function PATCH(
     const now = new Date();
 
     if (opensAtDate && Number.isNaN(opensAtDate.getTime())) {
-      return NextResponse.json(
-        { error: "Invalid open date/time." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid open date/time." }, { status: 400 });
     }
 
     if (closesAtDate && Number.isNaN(closesAtDate.getTime())) {
-      return NextResponse.json(
-        { error: "Invalid close date/time." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid close date/time." }, { status: 400 });
     }
 
     if (
@@ -119,22 +120,50 @@ export async function PATCH(
       );
     }
 
+    let composition;
+    try {
+      composition = normalizeCompositionForSave({
+        quizType: body.quizType ?? quiz.quizType,
+        questionsPerAttempt:
+          body.questionsPerAttempt === null || body.questionsPerAttempt === undefined
+            ? null
+            : body.questionsPerAttempt > 0
+            ? Number(body.questionsPerAttempt)
+            : null,
+        compositionMode: body.compositionMode ?? quiz.compositionMode,
+        mcqPercentage: body.mcqPercentage ?? null,
+        identificationPercentage: body.identificationPercentage ?? null,
+        essayPercentage: body.essayPercentage ?? null,
+        computationalPercentage: body.computationalPercentage ?? null,
+        mcqCount: body.mcqCount ?? null,
+        identificationCount: body.identificationCount ?? null,
+        essayCount: body.essayCount ?? null,
+        computationalCount: body.computationalCount ?? null,
+      });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Invalid mixed quiz configuration.",
+        },
+        { status: 400 }
+      );
+    }
+
     const updatedQuiz = await prisma.quiz.update({
       where: { id: quizId },
       data: {
-        title: body.title.trim(),
-        description: body.description?.trim() || null,
+        title,
+        description: String(body.description || "").trim() || null,
         quizType: body.quizType ?? quiz.quizType,
         term: body.term ?? quiz.term,
         maxAttempts:
           body.maxAttempts && body.maxAttempts > 0
             ? Number(body.maxAttempts)
             : quiz.maxAttempts,
-        questionsPerAttempt:
-          body.questionsPerAttempt === null ||
-          body.questionsPerAttempt === undefined
-            ? null
-            : Number(body.questionsPerAttempt),
+        questionsPerAttempt: composition.questionsPerAttempt,
         shuffleOptions: body.shuffleOptions ?? quiz.shuffleOptions,
         avoidRepeatedQuestions:
           body.avoidRepeatedQuestions ?? quiz.avoidRepeatedQuestions,
@@ -145,6 +174,16 @@ export async function PATCH(
           body.attemptTimeLimitMinutes && body.attemptTimeLimitMinutes > 0
             ? Number(body.attemptTimeLimitMinutes)
             : null,
+
+        compositionMode: composition.compositionMode,
+        mcqPercentage: composition.mcqPercentage,
+        identificationPercentage: composition.identificationPercentage,
+        essayPercentage: composition.essayPercentage,
+        computationalPercentage: composition.computationalPercentage,
+        mcqCount: composition.mcqCount,
+        identificationCount: composition.identificationCount,
+        essayCount: composition.essayCount,
+        computationalCount: composition.computationalCount,
       },
     });
 
