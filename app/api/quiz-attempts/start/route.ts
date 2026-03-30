@@ -107,7 +107,6 @@ export async function POST(req: Request) {
         opensAt: true,
         closesAt: true,
         attemptTimeLimitMinutes: true,
-
         compositionMode: true,
         mcqPercentage: true,
         identificationPercentage: true,
@@ -117,7 +116,6 @@ export async function POST(req: Request) {
         identificationCount: true,
         essayCount: true,
         computationalCount: true,
-
         questions: {
           select: {
             id: true,
@@ -220,6 +218,7 @@ export async function POST(req: Request) {
     }
 
     let attempt = unfinishedAttempt;
+    let createdNewAttempt = false;
 
     if (!attempt) {
       attempt = await prisma.quizAttempt.create({
@@ -252,6 +251,19 @@ export async function POST(req: Request) {
           },
         },
       });
+
+      createdNewAttempt = true;
+    }
+
+    if (createdNewAttempt) {
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          courseId: quiz.courseId,
+          actionType: "START_QUIZ",
+          targetId: quiz.id,
+        },
+      });
     }
 
     const remainingTimeSeconds =
@@ -273,6 +285,19 @@ export async function POST(req: Request) {
           score,
           currentQuestionId: null,
           currentQuestionStartedAt: null,
+        },
+      });
+
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          courseId: quiz.courseId,
+          actionType: "SUBMIT_QUIZ",
+          targetId: quiz.id,
+          durationSeconds: Math.max(
+            0,
+            Math.floor((Date.now() - new Date(attempt.startedAt).getTime()) / 1000)
+          ),
         },
       });
 
@@ -343,6 +368,19 @@ export async function POST(req: Request) {
             score,
             currentQuestionId: null,
             currentQuestionStartedAt: null,
+          },
+        });
+
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            courseId: quiz.courseId,
+            actionType: "SUBMIT_QUIZ",
+            targetId: quiz.id,
+            durationSeconds: Math.max(
+              0,
+              Math.floor((Date.now() - new Date(attempt.startedAt).getTime()) / 1000)
+            ),
           },
         });
 

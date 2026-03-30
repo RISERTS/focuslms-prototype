@@ -27,6 +27,13 @@ function ProgressBar({
   );
 }
 
+function formatSeconds(value: number) {
+  const total = Math.max(0, Math.floor(value));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}m ${seconds}s`;
+}
+
 export default async function InstructorCourseAnalyticsPage({
   params,
 }: {
@@ -100,7 +107,7 @@ export default async function InstructorCourseAnalyticsPage({
         })
       : [];
 
-  const quizAttempts =
+  const attempts =
     studentIds.length > 0 && quizIds.length > 0
       ? await prisma.quizAttempt.findMany({
           where: {
@@ -110,13 +117,16 @@ export default async function InstructorCourseAnalyticsPage({
             quizId: {
               in: quizIds,
             },
-            finishedAt: {
-              not: null,
-            },
           },
           select: {
             studentId: true,
             quizId: true,
+            finishedAt: true,
+            answers: {
+              select: {
+                responseTimeSeconds: true,
+              },
+            },
           },
         })
       : [];
@@ -139,8 +149,10 @@ export default async function InstructorCourseAnalyticsPage({
     const row = rowMap.get(log.userId);
     if (!row) continue;
 
-    row.interactionCount += 1;
-    row.timeOnTaskSeconds += log.durationSeconds ?? 0;
+    if (log.actionType !== "ANSWER_QUESTION") {
+      row.interactionCount += 1;
+      row.timeOnTaskSeconds += log.durationSeconds ?? 0;
+    }
 
     if (
       log.actionType === "OPEN_MATERIAL" &&
@@ -151,10 +163,22 @@ export default async function InstructorCourseAnalyticsPage({
     }
   }
 
-  for (const attempt of quizAttempts) {
+  for (const attempt of attempts) {
     const row = rowMap.get(attempt.studentId);
     if (!row) continue;
-    row.completedQuizzes.add(attempt.quizId);
+
+    const answerCount = attempt.answers.length;
+    const answerTime = attempt.answers.reduce(
+      (sum, answer) => sum + (answer.responseTimeSeconds ?? 0),
+      0
+    );
+
+    row.interactionCount += answerCount;
+    row.timeOnTaskSeconds += answerTime;
+
+    if (attempt.finishedAt) {
+      row.completedQuizzes.add(attempt.quizId);
+    }
   }
 
   const totalTrackables = course.materials.length + course.quizzes.length;
@@ -263,15 +287,13 @@ export default async function InstructorCourseAnalyticsPage({
         </div>
 
         <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
-                BEI Leaderboard
-              </p>
-              <h2 className="mt-2 text-2xl font-bold text-gray-900">
-                Behavioral Engagement Index per Student
-              </h2>
-            </div>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
+              BEI Leaderboard
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-gray-900">
+              Behavioral Engagement Index per Student
+            </h2>
           </div>
 
           <div className="mt-6 space-y-5">
@@ -323,22 +345,22 @@ export default async function InstructorCourseAnalyticsPage({
                     />
                   </div>
 
-                  <div className="mt-5 grid gap-4 sm:grid-cols-4">
+                  <div className="mt-5 grid gap-4 sm:grid-cols-5">
                     <div className="rounded-2xl border border-gray-200 bg-white p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
                         Time-on-Task
                       </p>
                       <p className="mt-2 font-semibold text-gray-900">
-                        {row.timeOnTaskSeconds}s
+                        {formatSeconds(row.timeOnTaskSeconds)}
                       </p>
                     </div>
 
                     <div className="rounded-2xl border border-gray-200 bg-white p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
-                        Completion
+                        Interaction Count
                       </p>
                       <p className="mt-2 font-semibold text-gray-900">
-                        {(row.completionRate * 100).toFixed(2)}%
+                        {row.interactionCount}
                       </p>
                     </div>
 
@@ -353,10 +375,19 @@ export default async function InstructorCourseAnalyticsPage({
 
                     <div className="rounded-2xl border border-gray-200 bg-white p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
-                        Interaction Count
+                        Completed Quizzes
                       </p>
                       <p className="mt-2 font-semibold text-gray-900">
-                        {row.interactionCount}
+                        {row.completedQuizzes}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                      <p className="text-xs uppercase tracking-[0.15em] text-gray-500">
+                        Completion Rate
+                      </p>
+                      <p className="mt-2 font-semibold text-gray-900">
+                        {(row.completionRate * 100).toFixed(2)}%
                       </p>
                     </div>
                   </div>

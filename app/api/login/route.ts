@@ -56,6 +56,13 @@ export async function POST(req: Request) {
       role: user.role,
     });
 
+    await prisma.activityLog.create({
+  data: {
+    userId: user.id,
+    actionType: "LOGIN",
+  },
+});
+
     response.cookies.set("focuslms_session", token, {
       httpOnly: true,
       sameSite: "lax",

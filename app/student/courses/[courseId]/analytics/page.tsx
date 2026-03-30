@@ -27,6 +27,13 @@ function ProgressBar({
   );
 }
 
+function formatSeconds(value: number) {
+  const total = Math.max(0, Math.floor(value));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}m ${seconds}s`;
+}
+
 export default async function StudentCourseAnalyticsPage({
   params,
 }: {
@@ -113,7 +120,7 @@ export default async function StudentCourseAnalyticsPage({
         })
       : [];
 
-  const quizAttempts =
+  const attempts =
     studentIds.length > 0 && quizIds.length > 0
       ? await prisma.quizAttempt.findMany({
           where: {
@@ -123,13 +130,16 @@ export default async function StudentCourseAnalyticsPage({
             quizId: {
               in: quizIds,
             },
-            finishedAt: {
-              not: null,
-            },
           },
           select: {
             studentId: true,
             quizId: true,
+            finishedAt: true,
+            answers: {
+              select: {
+                responseTimeSeconds: true,
+              },
+            },
           },
         })
       : [];
@@ -150,8 +160,10 @@ export default async function StudentCourseAnalyticsPage({
     const row = rowMap.get(log.userId);
     if (!row) continue;
 
-    row.interactionCount += 1;
-    row.timeOnTaskSeconds += log.durationSeconds ?? 0;
+    if (log.actionType !== "ANSWER_QUESTION") {
+      row.interactionCount += 1;
+      row.timeOnTaskSeconds += log.durationSeconds ?? 0;
+    }
 
     if (
       log.actionType === "OPEN_MATERIAL" &&
@@ -162,10 +174,22 @@ export default async function StudentCourseAnalyticsPage({
     }
   }
 
-  for (const attempt of quizAttempts) {
+  for (const attempt of attempts) {
     const row = rowMap.get(attempt.studentId);
     if (!row) continue;
-    row.completedQuizzes.add(attempt.quizId);
+
+    const answerCount = attempt.answers.length;
+    const answerTime = attempt.answers.reduce(
+      (sum, answer) => sum + (answer.responseTimeSeconds ?? 0),
+      0
+    );
+
+    row.interactionCount += answerCount;
+    row.timeOnTaskSeconds += answerTime;
+
+    if (attempt.finishedAt) {
+      row.completedQuizzes.add(attempt.quizId);
+    }
   }
 
   const totalTrackables = course.materials.length + course.quizzes.length;
@@ -242,7 +266,7 @@ export default async function StudentCourseAnalyticsPage({
               Time-on-Task
             </p>
             <p className="mt-3 text-3xl font-bold text-gray-900">
-              {myRow.timeOnTaskSeconds}s
+              {formatSeconds(myRow.timeOnTaskSeconds)}
             </p>
           </div>
 
